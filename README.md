@@ -16,3 +16,5 @@ edge detection algorithms. In the third task we implement a simple banner using 
 * [Data Mining](data-mining) - implements fuzzy clustering algorithm, contains presentation and
 paper explaining this algorithm. The algorithm is based on this repository:
 [yclicc/FLAME-python](https://github.com/yclicc/FLAME-python)
+
+* [Computational geometry](computational-geometry) - some projects related to computer graphics
