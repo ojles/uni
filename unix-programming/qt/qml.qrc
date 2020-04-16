@@ -1,0 +1,14 @@
+<RCC>
+    <qresource prefix="/">
+        <file>main.qml</file>
+        <file>RectangleWithMessage.qml</file>
+        <file>FileStatusMark.qml</file>
+        <file>FolderSelector.qml</file>
+        <file>FileListControls.qml</file>
+        <file>FileList.qml</file>
+        <file>OldStyleButton.qml</file>
+        <file>OldStyleCheckBox.qml</file>
+        <file>About.qml</file>
+        <file>YellowToolTip.qml</file>
+    </qresource>
+</RCC>
