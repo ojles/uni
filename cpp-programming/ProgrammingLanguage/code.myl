@@ -1,0 +1,26 @@
+read> a;
+
+x#2 = 1;
+inx = 2;
+n = 10;
+
+while [n] {
+    asd = 1;
+    if [asd] {
+        asd = 2;
+        asd = 3;
+    }
+
+    a#1 = 2;
+    j=1;
+    c = a#j;
+
+    if [asd]
+    {
+    }
+
+    x#2 = 0.5 * (x#inx + a / x#2);
+    n = n - 1;
+}
+
+write > x#2;
