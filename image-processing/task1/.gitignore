@@ -1,0 +1,11 @@
+# task 1
+*-8.bmp
+*-8-rle.bmp
+*-diff-blue.bmp
+*-diff.bmp
+*-diff-green.bmp
+*-diff-red.bmp
+*.jpeg
+*-lzw.tiff
+*.pdf
+__pycache__/

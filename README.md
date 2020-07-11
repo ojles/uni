@@ -8,3 +8,7 @@ then run by a virtual machine.
 
 * [Unix Programming](unix-programming) - contains two simple tasks
 in various programming laguages (C, java, bash, python, perl, C#)
+
+* [Image Processing](image-processing) - contains three tasks on the topic of image processing.
+The first task is about image formats and compression methods. The second task implements different
+edge detection algorithms. In the third task we implement a simple banner using Macromedia Flash.

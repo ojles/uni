@@ -1,0 +1,65 @@
+onClipEvent (load) {
+	this.subo._alpha = 0;
+	this.ami_link_text._alpha = 0;
+	this.law_link_text._alpha = 0;
+	this.biology_link_text._alpha = 0;
+	this.physics_link_text._alpha = 0;
+	this.onRollOver = function () {
+		_root.gotoAndStop(1);
+		this.ami_link._alpha = 255;
+		this.ami_link_text._alpha = 255;
+		this.law_link._alpha = 255;
+		this.law_link_text._alpha = 255;
+		this.biology_link._alpha = 255;
+		this.biology_link_text._alpha = 255;
+		this.physics_link._alpha = 255;
+		this.physics_link_text._alpha = 255;
+		this.t1._alpha = 0;
+		this.t2._alpha = 0;
+	}
+	this.onRollOut = function() {
+		this.ami_link._alpha = 0;
+		this.ami_link_text._alpha = 0;
+		this.law_link._alpha = 0;
+		this.law_link_text._alpha = 0;
+		this.biology_link._alpha = 0;
+		this.biology_link_text._alpha = 0;
+		this.physics_link._alpha = 0;
+		this.physics_link_text._alpha = 0;
+		this.ami_link._alpha = 0;
+		_root.play();
+	}
+        this.ami_link.onRollOver = function() {
+           var colorful = new Color("this.ami_link");
+           colorful.setRGB(0xFFEE5E);
+        }
+        this.ami_link.onRollOut = function() {
+           var colorful = new Color("this.ami_link");
+           colorful.setRGB(0xFFFFFF);
+        }
+        this.law_link.onRollOver = function() {
+           var colorful = new Color("this.ami_link");
+           colorful.setRGB(0xFFEE5E);
+        }
+        this.law_link.onRollOut = function() {
+           var colorful = new Color("this.ami_link");
+           colorful.setRGB(0xFFFFFF);
+        }
+        this.biology_link.onRollOver = function() {
+           var colorful = new Color("this.ami_link");
+           colorful.setRGB(0xFFEE5E);
+        }
+        this.biology_link.onRollOut = function() {
+           var colorful = new Color("this.ami_link");
+           colorful.setRGB(0xFFFFFF);
+        }
+        this.physics_link.onRollOver = function() {
+           var colorful = new Color("this.ami_link");
+           colorful.setRGB(0xFFEE5E);
+        }
+        this.physics_link.onRollOut = function() {
+           var colorful = new Color("this.ami_link");
+           colorful.setRGB(0xFFFFFF);
+        }
+}
+
