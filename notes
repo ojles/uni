@@ -1,0 +1,10 @@
+* when for example person is deleted then faculty is removed too. Need to update tree when this happens
+* bug: can't add object to 'University' (top object)
+
+UNIX:
+    - when click on 'Please select folder' open dialog
+    - change 'Move' button text font or style when 'Return'
+    - add file size column
+    - add lines count column
+    - add chars count column
+    - when click on whole item make checkbox, maybe highlight

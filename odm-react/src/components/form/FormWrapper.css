@@ -1,0 +1,15 @@
+.form-wrapper {
+    position: relative;
+    padding: 25px 10px;
+    border: 1px gray solid;
+    border-radius: 10px;
+    margin: 10px 0;
+}
+
+.form-wrapper-text {
+    position: absolute;
+    top: -10px;
+    left: 6%;
+    background: white;
+    padding: 0 5px;
+}
