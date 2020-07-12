@@ -22,4 +22,7 @@ get tasks from the queue. Each instance can process a single task at a time. Aft
 on it's current task it grabs the next one from the queue. In this way the tasks are distributed between
 `compute` instances.
 
+* [Computational methods](computational-methods) - various computational method algorithms like interpolation,
+function approximation...
+
 * [Computational geometry](computational-geometry) - some projects related to computer graphics
