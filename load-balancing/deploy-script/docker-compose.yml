@@ -1,0 +1,67 @@
+version: '3'
+services:
+    rabbitmq:
+        image: "rabbitmq:3-management"
+        hostname: "rabbitmq"
+        container_name: 'ojles.loadbalancing.rabbitmq'
+        environment:
+            RABBITMQ_ERLANG_COOKIE: "SWQOKODSQALRPCLNMEQG"
+            RABBITMQ_DEFAULT_USER: "rabbitmq"
+            RABBITMQ_DEFAULT_PASS: "rabbitmq"
+            RABBITMQ_DEFAULT_VHOST: "/"
+        ports:
+            - "15672:15672"
+            - "5672:5672"
+        labels:
+            NAME: "rabbitmq1"
+        volumes:
+            - "./enabled_plugins:/etc/rabbitmq/enabled_plugins"
+            #- "./rabbitmq.config:/etc/rabbitmq/rabbitmq.config:ro"
+            #- "./autocluster-0.4.1.ez:/usr/lib/rabbitmq/lib/rabbitmq_server-3.5.5/plugins/autocluster-0.4.1.ez"
+    load-balancer:
+        image: 'nginx:latest'
+        container_name: 'ojles.loadbalancing.load-balancer'
+        ports:
+            - '80:80'
+        expose:
+            - '80'
+        volumes:
+            - "./nginx.conf:/etc/nginx/nginx.conf"
+        depends_on:
+            - compute1
+            - compute2
+            - rabbitmq
+    compute1:
+        image: 'ojles.loadbalancing/compute:latest'
+        hostname: 'compute1'
+        container_name: 'ojles.loadbalancing.compute1'
+        depends_on:
+            - rabbitmq
+        environment:
+            INSTANCE_NAME: 'compute1'
+            WAIT_HOSTS: database:3306, rabbitmq:5672
+    compute2:
+        image: 'ojles.loadbalancing/compute:latest'
+        hostname: 'compute2'
+        container_name: 'ojles.loadbalancing.compute2'
+        depends_on:
+            - rabbitmq
+        environment:
+            INSTANCE_NAME: 'compute2'
+            WAIT_HOSTS: database:3306, rabbitmq:5672
+    database:
+        image: mysql:5.7
+        hostname: 'database'
+        container_name: 'ojles.loadbalancing.database'
+        restart: always
+        environment:
+            MYSQL_DATABASE: 'compute'
+            MYSQL_ROOT_PASSWORD: 'deadl1ne'
+        ports:
+            - '3306:3306'
+        expose:
+            - '3306'
+        volumes:
+            - database:/var/lib/mysql
+volumes:
+    database:

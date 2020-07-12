@@ -17,4 +17,9 @@ edge detection algorithms. In the third task we implement a simple banner using 
 paper explaining this algorithm. The algorithm is based on this repository:
 [yclicc/FLAME-python](https://github.com/yclicc/FLAME-python)
 
+* [Load balancing](load-balancing) - a simple load balancing project using rabbitmq. The `compute` instances
+get tasks from the queue. Each instance can process a single task at a time. After it finishes working
+on it's current task it grabs the next one from the queue. In this way the tasks are distributed between
+`compute` instances.
+
 * [Computational geometry](computational-geometry) - some projects related to computer graphics
