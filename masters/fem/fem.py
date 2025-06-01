@@ -22,3 +22,4 @@ class FEM():
                     AKT.append([ix*x_scale, iy*y_scale, iz*z_scale])
 
         self.AKT = AKT
+        self.nqp = len(AKT)
