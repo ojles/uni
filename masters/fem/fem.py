@@ -8,12 +8,15 @@ class FEM():
         self.nx = nx
         self.ny = ny
         self.nz = nz
+        self.dx = ax / nx
+        self.dy = ay / ny
+        self.dz = az / nz
 
     def mesh(self):
         AKT = []
-        x_scale = (self.ax / self.nx) / 2
-        y_scale = (self.ay / self.ny) / 2
-        z_scale = (self.az / self.nz) / 2
+        x_scale = self.dx / 2
+        y_scale = self.dy / 2
+        z_scale = self.dz / 2
         for iz in range(self.nz * 2 + 1):
             y_step = 1 + (iz % 2)
             for iy in range(0, self.ny * 2 + 1, y_step):
@@ -23,3 +26,65 @@ class FEM():
 
         self.AKT = AKT
         self.nqp = len(AKT)
+        print(AKT)
+
+        # Finite elements array
+        self.FE = self._finite_elements()
+
+        self.NT = self._NT()
+
+
+    def _finite_element(self, x0, y0, z0):
+        x1 = x0 + self.dx
+        y1 = y0 + self.dy
+        z1 = z0 + self.dz
+        x05 = (x0 + x1) / 2
+        y05 = (y0 + y1) / 2
+        z05 = (z0 + z1) / 2
+        return [
+                # 1, 2, 3, 4
+                [x0, y1, z0],
+                [x1, y1, z0],
+                [x1, y0, z0],
+                [x0, y0, z0],
+                # 5, 6, 7, 8
+                [x0, y1, z1],
+                [x1, y1, z1],
+                [x1, y0, z1],
+                [x0, y0, z1],
+                # 9, 10, 11, 12
+                [x05, y1, z0],
+                [x1, y05, z0],
+                [x05, y0, z0],
+                [x0, y05, z0],
+                # 13, 14, 15, 16
+                [x0, y1, z05],
+                [x1, y1, z05],
+                [x1, y0, z05],
+                [x0, y0, z05],
+                # 17, 18, 19, 20
+                [x05, y1, z1],
+                [x1, y05, z1],
+                [x05, y0, z1],
+                [x0, y05, z1],
+            ]
+
+
+    def _finite_elements(self):
+        fes = []
+        for zi in range(self.nz):
+            for yi in range(self.ny):
+                for xi in range(self.nx):
+                    fe = self._finite_element(xi * self.dx, yi * self.dy, zi * self.dz)
+                    fes.append(fe)
+        return fes
+
+
+    def _NT(self):
+        nt = []
+        for fe in self.FE:
+            nt0 = []
+            for vertex in fe:
+                nt0.append(self.AKT.index(vertex))
+            nt.append(nt0)
+        return nt
