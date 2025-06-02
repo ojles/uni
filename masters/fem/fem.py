@@ -2,7 +2,7 @@ import numpy as np
 import math
 
 
-FE_local_coords = [
+local_coords = [
         [-1, 1, -1],
         [1, 1, -1],
         [1, -1, -1],
@@ -26,7 +26,7 @@ FE_local_coords = [
     ]
 
 
-FE_face_local_coords = [
+face_local_coords = [
         [-1, 1, -1],
         [1, 1, -1],
         [1, -1, -1],
@@ -51,7 +51,6 @@ FE_face_local_coords = [
 
 
 sqrt06 = math.sqrt(0.6)
-
 
 
 class FEM():
@@ -190,7 +189,7 @@ class FEM():
             for beta in [-sqrt06, 0, sqrt06]:
                 for alpha in [-sqrt06, 0, sqrt06]:
                     el = []
-                    for i, abg_i in enumerate(FE_local_coords):
+                    for i, abg_i in enumerate(local_coords):
                         if i <= 7:
                             el.append([
                                 self._dPhi_dAlpha_1(alpha, beta, gamma, abg_i[0], abg_i[1], abg_i[2]),
@@ -227,7 +226,7 @@ class FEM():
         for eta in [-sqrt06, 0, sqrt06]:
             for tau in [-sqrt06, 0, sqrt06]:
                 el = []
-                for i, et in enumerate(FE_face_local_coords):
+                for i, et in enumerate(face_local_coords):
                     if i < 4:
                         el.append(self._dpsi_14(eta, tau, et[0], et[1]))
                     elif i == 4 or i == 6:
