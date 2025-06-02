@@ -1,4 +1,30 @@
 import numpy as np
+import math
+
+
+FE_local_coords = [
+        [-1, 1, -1],
+        [1, 1, -1],
+        [1, -1, -1],
+        [-1, -1, -1],
+        [-1, 1, 1],
+        [1, 1, 1],
+        [1, -1, 1],
+        [-1, -1, 1],
+        [0, 1, -1],
+        [1, 0, -1],
+        [0, -1, -1],
+        [-1, 0, -1],
+        [-1, 1, 0],
+        [1, 1, 0],
+        [1, -1, 0],
+        [-1, -1, 0],
+        [0, 1, 1],
+        [1, 0, 1],
+        [0, -1, 1],
+        [-1, 0, 1]
+    ]
+
 
 class FEM():
     def __init__(self, ax, ay, az, nx, ny, nz):
@@ -31,6 +57,8 @@ class FEM():
         self.FE = self._finite_elements()
 
         self.NT = self._NT()
+
+        self.DFIABG = self._DFIABG()
 
 
     def _finite_element(self, x0, y0, z0):
@@ -109,3 +137,25 @@ class FEM():
     def _dPhi_dGamma_2(self, a, b, g, ai, bi, gi):
         return (1/4) * (1 + a*ai) * (1 + b*bi) \
                 * (gi*(1 - a*a*bi*bi*gi*gi - b*b*ai*ai*gi*gi - g*g*ai*ai*bi*bi) - 2*g*(1+g*gi)*ai*ai*bi*bi)
+
+    def _DFIABG(self):
+        sqrt06 = math.sqrt(0.6)
+
+        DFIABG = []
+        for gamma in [-sqrt06, 0, sqrt06]:
+            for beta in [-sqrt06, 0, sqrt06]:
+                for alpha in [-sqrt06, 0, sqrt06]:
+                    el = []
+                    for i, abg_i in enumerate(FE_local_coords):
+                        if i <= 7:
+                            el.append([
+                                self._dPhi_dAlpha_1(alpha, beta, gamma, abg_i[0], abg_i[1], abg_i[2]),
+                                self._dPhi_dBeta_1( alpha, beta, gamma, abg_i[0], abg_i[1], abg_i[2]),
+                                self._dPhi_dGamma_1(alpha, beta, gamma, abg_i[0], abg_i[1], abg_i[2])])
+                        else:
+                            el.append([
+                                self._dPhi_dAlpha_2(alpha, beta, gamma, abg_i[0], abg_i[1], abg_i[2]),
+                                self._dPhi_dBeta_2( alpha, beta, gamma, abg_i[0], abg_i[1], abg_i[2]),
+                                self._dPhi_dGamma_2(alpha, beta, gamma, abg_i[0], abg_i[1], abg_i[2])])
+                    DFIABG.append(el)
+        return DFIABG

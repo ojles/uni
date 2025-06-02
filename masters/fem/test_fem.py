@@ -2,6 +2,7 @@ import unittest
 from fem import FEM  # adjust the import path if needed
 
 import numpy as np
+import math
 
 
 def mesh_reference_function(a, b, c, na, nb, nc):
@@ -122,6 +123,101 @@ class TestFEM(unittest.TestCase):
                             + gamma_i * (1 + gamma * gamma_i))
                     assert result == expected_result, \
                             "Failed to calculate _dPhi_dGamma_1"
+
+    def test_DFIABG(self):
+
+        # Expected functions ====================================================
+        nol_shist = math.sqrt(0.6)
+        alpha_for = [-nol_shist, 0, nol_shist]
+        beta_for = [-nol_shist, 0, nol_shist]
+        gamma_for = [-nol_shist, 0, nol_shist]
+        local_points = [
+            [-1, 1, -1],  # 1
+            [1, 1, -1],  # 2
+            [1, -1, -1],  # 3
+            [-1, -1, -1],  # 4
+            [-1, 1, 1],  # 5
+            [1, 1, 1],  # 6
+            [1, -1, 1],  # 7
+            [-1, -1, 1],  # 8
+            [0, 1, -1],  # 9
+            [1, 0, -1],  # 10
+            [0, -1, -1],  # 11
+            [-1, 0, -1],  # 12
+            [-1, 1, 0],  # 13
+            [1, 1, 0],  # 14
+            [1, -1, 0],  # 15
+            [-1, -1, 0],  # 16
+            [0, 1, 1],  # 17
+            [1, 0, 1],  # 18
+            [0, -1, 1],  # 19
+            [-1, 0, 1]  # 20
+        ]
+        def DFIABG_Create():
+            result = []
+            for gamma in gamma_for:
+                for beta in beta_for:
+                    for alpha in alpha_for:
+                        a = []
+                        for point in local_points:
+                            if local_points.index(point) > 7:
+                                a.append(DFIABD_center_side(alpha, beta, gamma, point[0], point[1], point[2]))
+                            else:
+                                a.append(DFIABD_angle(alpha, beta, gamma, point[0], point[1], point[2]))
+                        result.append(a)
+            return result
+
+        def DFIABD_angle(alpha, beta, gamma, alpha_i, beta_i, gamma_i):
+            result = [
+                (1 / 8) * (1 + beta * beta_i) * (1 + gamma * gamma_i) *
+                (alpha_i * (-2 + alpha * alpha_i + gamma * gamma_i + beta * beta_i) + alpha_i * (1 + alpha * alpha_i)),
+
+                (1 / 8) * (1 + alpha * alpha_i) * (1 + gamma * gamma_i) *
+                (beta_i * (-2 + alpha * alpha_i + gamma * gamma_i + beta * beta_i) + beta_i * (1 + beta * beta_i)),
+
+                (1 / 8) * (1 + beta * beta_i) * (1 + alpha * alpha_i) *
+                (gamma_i * (-2 + alpha * alpha_i + gamma * gamma_i + beta * beta_i) + gamma_i * (1 + gamma * gamma_i))
+            ]
+            return result
+
+        def DFIABD_center_side(alpha, beta, gamma, alpha_i, beta_i, gamma_i):
+            result = [
+                (1 / 4) * (1 + beta * beta_i) * (1 + gamma * gamma_i) *
+                (alpha_i * (
+                        -beta_i * beta_i * gamma_i * gamma_i * alpha * alpha
+                        - beta * beta * gamma_i * gamma_i * alpha_i * alpha_i
+                        - beta_i * beta_i * gamma * gamma * alpha_i * alpha_i + 1) -
+                 (2 * beta_i * beta_i * gamma_i * gamma_i * alpha) * (alpha * alpha_i + 1)),
+
+                (1 / 4) * (1 + alpha * alpha_i) * (1 + gamma * gamma_i) *
+                (beta_i * (
+                        -beta_i * beta_i * gamma_i * gamma_i * alpha * alpha
+                        - beta * beta * gamma_i * gamma_i * alpha_i * alpha_i
+                        - beta_i * beta_i * gamma * gamma * alpha_i * alpha_i + 1) -
+                 (2 * beta * gamma_i * gamma_i * alpha_i * alpha_i) * (beta_i * beta + 1)),
+
+                (1 / 4) * (1 + beta * beta_i) * (1 + alpha * alpha_i) *
+                (gamma_i * (
+                        -beta_i * beta_i * gamma_i * gamma_i * alpha * alpha
+                        - beta * beta * gamma_i * gamma_i * alpha_i * alpha_i
+                        - beta_i * beta_i * gamma * gamma * alpha_i * alpha_i + 1) -
+                 (2 * beta_i * beta_i * gamma * alpha_i * alpha_i) * (gamma * gamma_i + 1))
+            ]
+
+            return result
+        # Expected functions END ================================================
+
+        fem = FEM(1, 1, 1, 1, 1, 1)
+        fem.mesh()
+
+        result = np.array(fem.DFIABG)
+        expected_result = np.array(DFIABG_Create())
+
+        assert result.shape == expected_result.shape, \
+            f"Shape mismatch: {result.shape} vs {expected_result.shape}"
+
+        np.testing.assert_array_equal(result, expected_result)
+
 
 
 if __name__ == "__main__":
