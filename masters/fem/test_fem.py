@@ -125,7 +125,6 @@ class TestFEM(unittest.TestCase):
                             "Failed to calculate _dPhi_dGamma_1"
 
     def test_DFIABG(self):
-
         # Expected functions ====================================================
         nol_shist = math.sqrt(0.6)
         alpha_for = [-nol_shist, 0, nol_shist]
@@ -217,6 +216,52 @@ class TestFEM(unittest.TestCase):
             f"Shape mismatch: {result.shape} vs {expected_result.shape}"
 
         np.testing.assert_array_equal(result, expected_result)
+
+    def test_DXYZABG(self):
+        def DExyzDEabg(xyz, dfiabj):
+            result = []
+            for i in range(27):
+                summ_x_a = []
+                summ_x_b = []
+                summ_x_g = []
+                summ_y_a = []
+                summ_y_b = []
+                summ_y_g = []
+                summ_z_a = []
+                summ_z_b = []
+                summ_z_g = []
+                for point in xyz:
+                    index_of_nt = xyz.index(point)
+                    summ_x_a.append(point[0] * dfiabj[i][index_of_nt][0])
+                    summ_x_b.append(point[0] * dfiabj[i][index_of_nt][1])
+                    summ_x_g.append(point[0] * dfiabj[i][index_of_nt][2])
+
+                    summ_y_a.append(point[1] * dfiabj[i][index_of_nt][0])
+                    summ_y_b.append(point[1] * dfiabj[i][index_of_nt][1])
+                    summ_y_g.append(point[1] * dfiabj[i][index_of_nt][2])
+
+                    summ_z_a.append(point[2] * dfiabj[i][index_of_nt][0])
+                    summ_z_b.append(point[2] * dfiabj[i][index_of_nt][1])
+                    summ_z_g.append(point[2] * dfiabj[i][index_of_nt][2])
+                result.append([
+                    [sum(summ_x_a), sum(summ_y_a), sum(summ_z_a)],
+                    [sum(summ_x_b), sum(summ_y_b), sum(summ_z_b)],
+                    [sum(summ_x_g), sum(summ_y_g), sum(summ_z_g)],
+                ])
+            return result
+
+        fem = FEM(2, 2, 3, 1, 1, 2)
+        fem.mesh()
+        f_elem = fem.finite_elements[0]
+
+        result = np.array(fem._DXYZABG(f_elem))
+        expected_result = np.array(DExyzDEabg(f_elem, fem.DFIABG))
+
+        assert result.shape == expected_result.shape, \
+            f"Shape mismatch: {result.shape} vs {expected_result.shape}"
+
+        np.testing.assert_array_equal(result, expected_result)
+
 
 
 
