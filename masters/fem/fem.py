@@ -98,7 +98,7 @@ class FEM():
 
         self.ZP = []
         elems_count = len(self.finite_elements)
-        for i in range(self.na * self.nb):
+        for i in range(self.nx * self.ny):
             self.ZP.append([elems_count - i - 1, 6, self.P])
 
         self.NT = self._NT()
@@ -117,6 +117,7 @@ class FEM():
         for elem_idx, _ in enumerate(self.finite_elements):
              self.DFIXYZ.append(self._DFIXYZ(elem_idx))
 
+        FE = []
         for zp in self.ZP:
             FE.append(self._FE(zp))
 
@@ -393,5 +394,5 @@ class FEM():
                 index_for_depsite += 1
         return result
 
-    def _FE(self):
+    def _FE(self, a):
         pass
