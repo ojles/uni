@@ -26,6 +26,34 @@ FE_local_coords = [
     ]
 
 
+FE_face_local_coords = [
+        [-1, 1, -1],
+        [1, 1, -1],
+        [1, -1, -1],
+        [-1, -1, -1],
+        [-1, 1, 1],
+        [1, 1, 1],
+        [1, -1, 1],
+        [-1, -1, 1],
+        [0, 1, -1],
+        [1, 0, -1],
+        [0, -1, -1],
+        [-1, 0, -1],
+        [-1, 1, 0],
+        [1, 1, 0],
+        [1, -1, 0],
+        [-1, -1, 0],
+        [0, 1, 1],
+        [1, 0, 1],
+        [0, -1, 1],
+        [-1, 0, 1]
+    ]
+
+
+sqrt06 = math.sqrt(0.6)
+
+
+
 class FEM():
     def __init__(self, ax, ay, az, nx, ny, nz):
         self.ax = ax
@@ -157,8 +185,6 @@ class FEM():
                 * (gi*(1 - a*a*bi*bi*gi*gi - b*b*ai*ai*gi*gi - g*g*ai*ai*bi*bi) - 2*g*(1+g*gi)*ai*ai*bi*bi)
 
     def _DFIABG(self):
-        sqrt06 = math.sqrt(0.6)
-
         DFIABG = []
         for gamma in [-sqrt06, 0, sqrt06]:
             for beta in [-sqrt06, 0, sqrt06]:
@@ -177,6 +203,38 @@ class FEM():
                                 self._dPhi_dGamma_2(alpha, beta, gamma, abg_i[0], abg_i[1], abg_i[2])])
                     DFIABG.append(el)
         return DFIABG
+
+    def _dpsi_14(self, e, t, ei, ti):
+        return [
+            (1/4) * (t*ti + 1) * ei * (2*ei*e +   ti*t),
+            (1/4) * (ei*e + 1) * ti * (  ei*e + 2*ti*t)
+        ]
+
+    def _dpsi_57(self, e, t, ei, ti):
+        return [
+            (-t*ti - 1) * e,
+            (1/2) * (1 - e*e)*ti
+        ]
+
+    def _dpsi_68(self, e, t, ei, ti):
+        return [
+            (1/2) * (1 - t*t)*ei,
+            (-e*ei - 1)*t
+        ]
+
+    def _DPSITE(self):
+        DPSITE = []
+        for eta in [-sqrt06, 0, sqrt06]:
+            for tau in [-sqrt06, 0, sqrt06]:
+                el = []
+                for i, et in enumerate(FE_face_local_coords):
+                    if i < 4:
+                        el.append(self._dpsi_14(eta, tau, et[0], et[1]))
+                    elif i == 4 or i == 6:
+                        el.append(self._dpsi_57(eta, tau, et[0], et[1]))
+                    elif i == 5 or i == 7:
+                        el.append(self._dpsi_68(eta, tau, et[0], et[1]))
+                DPSITE.append(el)
 
     def _DXYZABG(self, el):
         DXYZABG = []
