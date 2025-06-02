@@ -313,7 +313,8 @@ class FEM():
                                     * self.DJ[el_idx][gauss_i]
 
                             a23 += cm * cn * ck \
-                                    * (lambda_val * self.nu * (d_phi[i][1] * d_phi[j][2]) \ + self.mu * (d_phi[i][2] * d_phi[j][1])) \
+                                    * (lambda_val * self.nu * (d_phi[i][1] * d_phi[j][2]) \
+                                    + self.mu * (d_phi[i][2] * d_phi[j][1])) \
                                     * self.DJ[el_idx][gauss_i]
 
                             gauss_i = gauss_i + 1
