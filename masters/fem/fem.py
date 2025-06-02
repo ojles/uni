@@ -71,6 +71,7 @@ class FEM():
         self.nu = 0
         self.mu = 0
         self.lambda_ = 0
+        self.P = 0
 
     def mesh(self):
         AKT = []
@@ -87,8 +88,18 @@ class FEM():
         self.AKT = AKT
         self.nqp = len(AKT)
 
+        self.ZU = []
+        for point in self.AKT:
+            if point[2] == 0:
+                self.ZU.append(point)
+
         # Finite elements array
         self.finite_elements = self._finite_elements()
+
+        self.ZP = []
+        elems_count = len(self.finite_elements)
+        for i in range(self.na * self.nb):
+            self.ZP.append([elems_count - i - 1, 6, self.P])
 
         self.NT = self._NT()
 
@@ -105,6 +116,9 @@ class FEM():
         self.DFIXYZ = []
         for elem_idx, _ in enumerate(self.finite_elements):
              self.DFIXYZ.append(self._DFIXYZ(elem_idx))
+
+        for zp in self.ZP:
+            FE.append(self._FE(zp))
 
     def _finite_element(self, x0, y0, z0):
         x1 = x0 + self.dx
@@ -350,3 +364,34 @@ class FEM():
         meg[40:, 40:] = m6
 
         return mge.tolist()
+
+    def DxyzDnt(self, xyz):
+        result = []
+        depsite = self.DEPSITE()
+        index_for_depsite = 0
+        for eta in eta_for:
+            for tau in tau_for:
+                summ_x_eta = []
+                summ_y_eta = []
+                summ_z_eta = []
+                summ_x_tau = []
+                summ_y_tau = []
+                summ_z_tau = []
+                for point in xyz:
+                    index_of_nt = xyz.index(point)
+                    summ_x_eta.append(point[0] * depsite[index_for_depsite][index_of_nt][0])
+                    summ_y_eta.append(point[1] * depsite[index_for_depsite][index_of_nt][0])
+                    summ_z_eta.append(point[2] * depsite[index_for_depsite][index_of_nt][0])
+                    summ_x_tau.append(point[0] * depsite[index_for_depsite][index_of_nt][1])
+                    summ_y_tau.append(point[1] * depsite[index_for_depsite][index_of_nt][1])
+                    summ_z_tau.append(point[2] * depsite[index_for_depsite][index_of_nt][1])
+                result.append([
+                    [sum(summ_x_eta), sum(summ_x_tau)],
+                    [sum(summ_y_eta), sum(summ_y_tau)],
+                    [sum(summ_z_eta), sum(summ_z_tau)]
+                ])
+                index_for_depsite += 1
+        return result
+
+    def _FE(self):
+        pass
