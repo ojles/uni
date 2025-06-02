@@ -65,6 +65,63 @@ class TestFEM(unittest.TestCase):
 
         np.testing.assert_array_equal(actual_mesh, expected_mesh)
 
+    def test_dPhi_dAlpha_1(self):
+        fem = FEM(1, 1, 1, 1, 1, 1)
+
+        alpha = 1
+        beta = 2
+        gamma = 3
+        for i in [-1, 0, 1]:
+            for j in [-1, 0, 1]:
+                for k in [-1, 0, 1]:
+                    alpha_i = i
+                    beta_i = j
+                    gamma_i = k
+                    result = fem._dPhi_dAlpha_1(alpha, beta, gamma, alpha_i, beta_i, gamma_i)
+                    expected_result = (1 / 8) * (1 + beta * beta_i) * (1 + gamma * gamma_i) \
+                            * (alpha_i * (-2 + alpha * alpha_i + gamma * gamma_i + beta * beta_i) \
+                            + alpha_i * (1 + alpha * alpha_i))
+                    assert result == expected_result, \
+                            "Failed to calculate _dPhi_dAlpha_1"
+
+    def test_dPhi_dBeta_1(self):
+        fem = FEM(1, 1, 1, 1, 1, 1)
+
+        alpha = 1
+        beta = 2
+        gamma = 3
+        for i in [-1, 0, 1]:
+            for j in [-1, 0, 1]:
+                for k in [-1, 0, 1]:
+                    alpha_i = i
+                    beta_i = j
+                    gamma_i = k
+                    result = fem._dPhi_dBeta_1(alpha, beta, gamma, alpha_i, beta_i, gamma_i)
+                    expected_result = (1 / 8) * (1 + alpha * alpha_i) * (1 + gamma * gamma_i) \
+                            * (beta_i * (-2 + alpha * alpha_i + gamma * gamma_i + beta * beta_i) \
+                            + beta_i * (1 + beta * beta_i))
+                    assert result == expected_result, \
+                            "Failed to calculate _dPhi_dBeta_1"
+
+
+    def test_dPhi_dGamma_1(self):
+        fem = FEM(1, 1, 1, 1, 1, 1)
+
+        alpha = 1
+        beta = 2
+        gamma = 3
+        for i in [-1, 0, 1]:
+            for j in [-1, 0, 1]:
+                for k in [-1, 0, 1]:
+                    alpha_i = i
+                    beta_i = j
+                    gamma_i = k
+                    result = fem._dPhi_dGamma_1(alpha, beta, gamma, alpha_i, beta_i, gamma_i)
+                    expected_result = (1 / 8) * (1 + beta * beta_i) * (1 + alpha * alpha_i) \
+                            * (gamma_i * (-2 + alpha * alpha_i + gamma * gamma_i + beta * beta_i) \
+                            + gamma_i * (1 + gamma * gamma_i))
+                    assert result == expected_result, \
+                            "Failed to calculate _dPhi_dGamma_1"
 
 
 if __name__ == "__main__":

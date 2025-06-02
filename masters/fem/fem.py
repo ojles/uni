@@ -26,7 +26,6 @@ class FEM():
 
         self.AKT = AKT
         self.nqp = len(AKT)
-        print(AKT)
 
         # Finite elements array
         self.FE = self._finite_elements()
@@ -88,3 +87,25 @@ class FEM():
                 nt0.append(self.AKT.index(vertex))
             nt.append(nt0)
         return nt
+
+
+    def _dPhi_dAlpha_1(self, a, b, g, ai, bi, gi):
+        return (1/8) * ai * (1 + b*bi) * (1 + g*gi) * (2*a*ai + b*bi + g*gi - 1)
+
+    def _dPhi_dBeta_1(self, a, b, g, ai, bi, gi):
+        return (1/8) * bi * (1 + a*ai) * (1 + g*gi) * (a*ai + 2*b*bi + g*gi - 1)
+
+    def _dPhi_dGamma_1(self, a, b, g, ai, bi, gi):
+        return (1/8) * gi * (1 + a*ai) * (1 + b*bi) * (a*ai + b*bi + 2*g*gi - 1)
+
+    def _dPhi_dAlpha_2(self, a, b, g, ai, bi, gi):
+        return (1/4) * (1 + b*bi) * (1 + g*gi) \
+                * (ai*(1 - a*a*bi*bi*gi*gi - b*b*ai*ai*gi*gi - g*g*ai*ai*bi*bi) - 2*a*(1+a*ai)*bi*bi*gi*gi)
+
+    def _dPhi_dBeta_2(self, a, b, g, ai, bi, gi):
+        return (1/4) * (1 + a*ai) * (1 + g*gi) \
+                * (bi*(1 - a*a*bi*bi*gi*gi - b*b*ai*ai*gi*gi - g*g*ai*ai*bi*bi) - 2*b*(1+b*bi)*ai*ai*gi*gi)
+
+    def _dPhi_dGamma_2(self, a, b, g, ai, bi, gi):
+        return (1/4) * (1 + a*ai) * (1 + b*bi) \
+                * (gi*(1 - a*a*bi*bi*gi*gi - b*b*ai*ai*gi*gi - g*g*ai*ai*bi*bi) - 2*g*(1+g*gi)*ai*ai*bi*bi)
