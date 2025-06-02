@@ -54,11 +54,15 @@ class FEM():
         self.nqp = len(AKT)
 
         # Finite elements array
-        self.FE = self._finite_elements()
+        self.finite_elements = self._finite_elements()
 
         self.NT = self._NT()
 
         self.DFIABG = self._DFIABG()
+
+        self.DJ = []
+        for f_elem in self.finite_elements:
+             self.DJ.append(self._DXYZABG(f_elem))
 
 
     def _finite_element(self, x0, y0, z0):
@@ -98,20 +102,20 @@ class FEM():
 
 
     def _finite_elements(self):
-        fes = []
+        finite_elements = []
         for zi in range(self.nz):
             for yi in range(self.ny):
                 for xi in range(self.nx):
-                    fe = self._finite_element(xi * self.dx, yi * self.dy, zi * self.dz)
-                    fes.append(fe)
-        return fes
+                    f_elem = self._finite_element(xi * self.dx, yi * self.dy, zi * self.dz)
+                    finite_elements.append(f_elem)
+        return finite_elements
 
 
     def _NT(self):
         nt = []
-        for fe in self.FE:
+        for f_elem in self.finite_elements:
             nt0 = []
-            for vertex in fe:
+            for vertex in f_elem:
                 nt0.append(self.AKT.index(vertex))
             nt.append(nt0)
         return nt
@@ -159,3 +163,22 @@ class FEM():
                                 self._dPhi_dGamma_2(alpha, beta, gamma, abg_i[0], abg_i[1], abg_i[2])])
                     DFIABG.append(el)
         return DFIABG
+
+    def _DXYZABG(self, el):
+        DXYZABG = []
+
+        for gauss_i in range(3*3*3):
+            #   [dx/da, dy/da, dz/da]
+            #   [dx/db, dy/db, dz/db]
+            #   [dx/dg, dy/dg, dz/dg]
+            j = [[0, 0, 0],
+                 [0, 0, 0],
+                 [0, 0, 0]]
+            for point_idx, point in enumerate(el):
+                for abg_i in range(3):
+                    for xyz_i in range(3):
+                        j[abg_i][xyz_i] += point[xyz_i] * self.DFIABG[gauss_i][point_idx][abg_i]
+
+            DXYZABG.append(j)
+
+        return DXYZABG
