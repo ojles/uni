@@ -64,6 +64,9 @@ class FEM():
         for f_elem in self.finite_elements:
              self.DJ.append(self._DXYZABG(f_elem))
 
+        self.DFIXYZ = []
+        for elem_idx, _ in enumerate(self.finite_elements):
+             self.DFIXYZ.append(self._DFIXYZ(elem_idx))
 
     def _finite_element(self, x0, y0, z0):
         x1 = x0 + self.dx
@@ -166,7 +169,6 @@ class FEM():
 
     def _DXYZABG(self, el):
         DXYZABG = []
-
         for gauss_i in range(3*3*3):
             #   [dx/da, dy/da, dz/da]
             #   [dx/db, dy/db, dz/db]
@@ -178,7 +180,15 @@ class FEM():
                 for abg_i in range(3):
                     for xyz_i in range(3):
                         j[abg_i][xyz_i] += point[xyz_i] * self.DFIABG[gauss_i][point_idx][abg_i]
-
             DXYZABG.append(j)
-
         return DXYZABG
+
+    def _DFIXYZ(self, elem_idx):
+        DFIXYZ = []
+        for gauss_i in range(3*3*3):
+            dfixyz = []
+            for phi_i_abg in self.DFIABG[gauss_i]:
+                x = np.linalg.solve(self.DJ[elem_idx][gauss_i], phi_i_abg).tolist()
+                dfixyz.append(x)
+            DFIXYZ.append(dfixyz)
+        return DFIXYZ
