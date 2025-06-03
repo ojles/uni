@@ -1,0 +1,21 @@
+version: '3'
+
+services:
+  latex:
+    build: .
+    volumes:
+      - .:/data:rw
+    working_dir: /data
+    environment:
+      - TEX_FILE=${TEX_FILE}
+    command: >
+      sh -c "
+        if [ -z \"$$TEX_FILE\" ]; then
+          echo 'Error: TEX_FILE variable is not set!';
+          exit 1;
+        fi;
+        while true; do
+          inotifywait -e close_write,moved_to,create . &&
+          latexmk -pdf $$TEX_FILE
+        done
+      "

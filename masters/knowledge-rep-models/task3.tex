@@ -1,0 +1,106 @@
+\documentclass[a4paper,14pt]{extarticle} % <<< use extarticle for 14pt size
+
+\usepackage[T2A]{fontenc}
+\usepackage[utf8]{inputenc}
+\usepackage[ukrainian]{babel}
+\usepackage{setspace} % Optional: for nicer spacing
+\usepackage{parskip} % Optional: spacing between paragraphs without indentation
+\usepackage[margin=1in]{geometry}
+
+\usepackage{fancyhdr}
+\pagestyle{fancy}
+\fancyhf{}
+
+\usepackage{amsmath}
+
+\begin{document}
+\thispagestyle{empty}
+
+\begin{center}
+    \textbf{Львівський національний університет імені Івана Франка}\\[1ex]
+    Кафедра дискретного аналізу та інтелектуальних систем
+\end{center}
+
+\vspace{5cm} % Space before main title
+
+\begin{center}
+    \Large\textbf{Курс «Моделі подання знань»}\\[4ex]
+    \huge\textbf{ЗВІТ}\\[3ex]
+    \Large з семінарських занять за матеріалами лекцій 7 та 8 (пакет завдань № 3)
+\end{center}
+
+\vspace{2cm}
+\begin{flushright}
+    Виконав:\\
+    Студент групи ПМіМ-12\\
+    Паньків Олесь
+\end{flushright}
+
+\fancyfoot{Львів 2025}
+
+\newpage
+\pagestyle{plain}
+
+\textbf{Завдання 7.} Рівняння (8.1) у лекції 8 визначає умову, за якої квадрат вітряний. Тут ми
+розглянемо два інших шляхи описати цей аспект світу вампуса.\\
+\textbf{б)} Ми можемо записати причинно-наслідкові правила, що ведуть від причини до наслідку.
+Одне очевидне причинно-наслідкове правило полягає в тому, що яма спричиняє, що всі
+сусідні квадрати будуть вітряними. Запишіть це правило в логіці першого порядку, поясніть,
+чому воно неповне порівняно з рівнянням (8.1), і додайте відсутню аксіому.
+
+\textbf{Розв'язок}: Запишемо причинно-наслідкове правило, що яма спричиняє
+сусідні вітряні квадрати:
+
+\[
+    \forall s\; \text{Pit}(s) \Rightarrow \left( \forall r\; \text{Adjacent}(r, s) \Rightarrow \text{Breezy}(r) \right)
+\]
+
+Ця логіка не забороняє існування вітру без наявності ями в сусідніх клітинках:
+
+\[
+    \exists s\; \left( \left( \forall r\; \text{Adjacent}(r, s) \Rightarrow \neg\text{Pit}(r) \right) \land \text{Breezy}(s) \right)
+\]
+
+Це стає проблемою тоді, коли агент відчуває вітер і намагається зробити висновок про наявність ями.
+Без додаткового обмеження агент не може бути впевненим, що вітер спричинений ямою, бо формально
+допускається, що вітер міг виникнути сам по собі. Запишемо аксіому щоб виправити це:
+
+\[
+    \forall s\; \left( \forall r\; \text{Adjacent}(r, s) \Rightarrow \neg\text{Pit}(r) \right) \Rightarrow \neg\text{Breezy}(s)
+\]
+
+
+Для повного та коректного опису взаємозв'язку між ямами та вітром необхідно використовувати
+обидві формули: перша встановлює, що наявність ями спричиняє вітер у суміжних клітинках, а
+друга — гарантує відсутність вітру за відсутності суміжних ям.
+
+\vspace{1cm} % Space before main title
+\textbf{Завдання 10.} Використовуючи предикати \textit{Parent(p, q)}, \textit{Female(p)}
+і константи \textit{Joan}, \textit{Kevin} з очевидними значеннями, висловіть кожне з поданих речень
+висловленням у логіці першого порядку. (Використайте $\exists!$ для квантора «існує точно один».)
+
+ґ) Джоана має принаймні одну дитину з Кевіним, і не має дітей з будь-ким іншим.
+
+\indent \textbf{Розв'язок}: Існує хоча б одна дитина, яка є спільною для Joan та Kevin.
+Це можна виразити предикатами
+Parent(Joan, c) та Parent(Kevin, c) для деякого c (c - 'child', тобто дитина).
+
+\[
+    \exists c\; \, \text{Parent}(\text{Joan}, c) \land \text{Parent}(\text{Kevin}, c)
+\]
+
+Далі потрібно забезпечити, що у Joan немає дітей з іншими особами. Для цього перевіряємо:
+для будь-якої дитини d, яка є дитиною Joan, будь-який її батько p повинен бути або Joan, або Kevin.
+Таким чином, ми забороняємо існування інших батьків, окрім Joan та Kevin.
+
+Тому остаточна формула має вигляд:
+
+\[
+    \begin{aligned}
+        \exists c\; & \, \text{Parent}(\text{Joan}, c) \land \text{Parent}(\text{Kevin}, c) \land \\
+                    & \forall d, p\; \left( \text{Parent}(\text{Joan}, d) \land \text{Parent}(p, d) \right)
+                    & \Rightarrow (p = \text{Joan} \lor p = \text{Kevin})
+    \end{aligned}
+\]
+
+\end{document}

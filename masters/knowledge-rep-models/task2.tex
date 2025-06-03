@@ -1,0 +1,134 @@
+\documentclass[a4paper,14pt]{extarticle} % <<< use extarticle for 14pt size
+
+\usepackage[T2A]{fontenc}
+\usepackage[utf8]{inputenc}
+\usepackage[ukrainian]{babel}
+\usepackage{setspace} % Optional: for nicer spacing
+\usepackage{parskip} % Optional: spacing between paragraphs without indentation
+\usepackage[margin=1in]{geometry}
+\usepackage{graphicx}
+\usepackage{array}
+\usepackage{enumitem}
+
+\usepackage{fancyhdr}
+\pagestyle{fancy}
+\fancyhf{}
+
+\usepackage{amsmath}
+
+\begin{document}
+\thispagestyle{empty}
+
+\begin{center}
+    \textbf{Львівський національний університет імені Івана Франка}\\[1ex]
+    Кафедра дискретного аналізу та інтелектуальних систем
+\end{center}
+
+\vspace{5cm} % Space before main title
+
+\begin{center}
+    \Large\textbf{Курс «Моделі подання знань»}\\[4ex]
+    \huge\textbf{ЗВІТ}\\[3ex]
+    \Large з семінарських занять за матеріалами лекцій 5 та 6 (пакет завдань № 2)
+\end{center}
+
+\vspace{2cm}
+\begin{flushright}
+    Виконав:\\
+    Студент групи ПМіМ-12\\
+    Паньків Олесь
+\end{flushright}
+
+\fancyfoot{Львів 2025}
+
+\newpage
+\pagestyle{plain}
+
+\textbf{Завдання 16.}
+\begin{enumerate}[label=]
+    \item а) Поясніть, чому будь-яке висловлення у формі непорожнього диз’юнкта
+        само по собі є виконуваним.
+    \item в) Висловлення задано у 3-CNF формі, причому в кожному диз’юнкті є саме
+        три різні змінні. Якою має бути найменша кількість диз’юнктів, щоб це
+        висловлення було невиконуваним? Побудуйте таке висловлення.
+\end{enumerate}
+
+\textbf{Розв'язок}:
+
+\textbf{а)} Непорожній диз’юнкт має принаймні один літерал.
+
+Будь-який диз’юнкт виконується тоді, коли хоча б один літерал у ньому істинний.
+
+Можна знайти набір значень змінних, де цей літерал істинний, тому такий диз’юнкт
+завжди має модель.
+
+Отже, будь-яке висловлення у формі одного непорожнього диз’юнкта – виконуване.
+
+\textbf{в)} Щоб зробити 3-CNF формулу невиконуваною, коли в кожному диз’юнкті по
+три різні змінні, потрібні щонайменше 8 диз’юнктів.
+
+\textbf{Приклад невиконуваного висловлення:}
+\[
+\begin{aligned}
+& (x_1 \lor x_2 \lor x_3) \\
+& (\neg x_1 \lor x_2 \lor x_3) \\
+& (x_1 \lor \neg x_2 \lor x_3) \\
+& (x_1 \lor x_2 \lor \neg x_3) \\
+& (\neg x_1 \lor \neg x_2 \lor x_3) \\
+& (\neg x_1 \lor x_2 \lor \neg x_3) \\
+& (x_1 \lor \neg x_2 \lor \neg x_3) \\
+& (\neg x_1 \lor \neg x_2 \lor \neg x_3)
+\end{aligned}
+\]
+
+Ці 8 диз’юнктів покривають усі можливі набори значень трьох змінних. Тому немає жодної моделі, що задовольняє всі диз’юнкти водночас.
+
+\vspace{1cm} % Space before main title
+\textbf{Завдання 21.} Використовуючи метод Девіса і Патнема, довести,
+що наступні висловлення виконувані.
+
+\begin{enumerate}[label=]
+    \item б) $(P \lor Q) \land (\neg P \lor Q) \land R. $
+\end{enumerate}
+
+\textbf{Розв'язок}:
+
+\textbf{б)}
+\begin{itemize}
+  \item З останньої частини отримаємо: \( R = 1 \).
+  \item Перша частина: \((P \lor Q) = 1\). Для цього достатньо, щоб \( P = 1 \) або \( Q = 1 \).
+  \item Друга частина: \((\neg P \lor Q) = 1\). Це можливо, якщо:
+    \begin{itemize}
+      \item Якщо \( P=1 \), то мусить бути \( Q=1 \).
+      \item Якщо \( P=0 \), тоді байдуже, бо \(\neg P=1\).
+    \end{itemize}
+  \item Один приклад істинного набору:  
+  \[
+  P=1, \quad Q=1, \quad R=1
+  \]
+  \item Перевірка:  
+  \[
+  (1 \lor 1)=1, \quad (\neg 1 \lor 1)=(0 \lor 1)=1, \quad R=1
+  \]
+\end{itemize}
+
+Отже, формула має модель – висловлення виконуване.
+
+\vspace{1cm} % Space before main title
+\textbf{Завдання 23.} Скільки часу потрібно (пропорційно до $\supset$), щоб довести
+$KB \models \alpha$ за допомогою алгоритму DPLL, якщо $\alpha$ – літерал, який уже є
+в базі знань $KB$. Поясніть отримані результати.
+
+\textbf{Розв'язок}: Час виконання алгоритму буде пропорційний \textbf{кількості символів}
+та \textbf{кількості одиничних диз’юнктів}.  
+
+Алгоритм DPLL працює наступним чином:
+\begin{enumerate}
+  \item Спочатку він видаляє всі чисті символи.
+  \item Потім обробляє одиничні диз'юнкти, поки не зустріне або $\alpha$, або $\neg \alpha$.
+  \item Побачивши, що і $\alpha$, і $\neg \alpha$ не можуть бути істинними одночасно,
+      алгоритм одразу визначає, що припущення про хибність $\alpha$ призводить до протиріччя.
+  \item Отже, $\alpha$ є істинним.
+\end{enumerate}
+
+\end{document}

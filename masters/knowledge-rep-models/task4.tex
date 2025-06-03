@@ -1,0 +1,125 @@
+\documentclass[a4paper,14pt]{extarticle} % <<< use extarticle for 14pt size
+
+\usepackage[T2A]{fontenc}
+\usepackage[utf8]{inputenc}
+\usepackage[ukrainian]{babel}
+\usepackage{setspace} % Optional: for nicer spacing
+\usepackage{parskip} % Optional: spacing between paragraphs without indentation
+\usepackage[margin=1in]{geometry}
+
+\usepackage{fancyhdr}
+\pagestyle{fancy}
+\fancyhf{}
+
+\usepackage{amsmath}
+\usepackage{listings}
+
+\begin{document}
+\thispagestyle{empty}
+
+\begin{center}
+    \textbf{Львівський національний університет імені Івана Франка}\\[1ex]
+    Кафедра дискретного аналізу та інтелектуальних систем
+\end{center}
+
+\vspace{5cm} % Space before main title
+
+\begin{center}
+    \Large\textbf{Курс «Моделі подання знань»}\\[4ex]
+    \huge\textbf{ЗВІТ}\\[3ex]
+    \Large з семінарських занять за матеріалами лекцій 9 - 11 (пакет завдань № 4)
+\end{center}
+
+\vspace{2cm}
+\begin{flushright}
+    Виконав:\\
+    Студент групи ПМіМ-12\\
+    Паньків Олесь
+\end{flushright}
+
+\fancyfoot{Львів 2025}
+
+\newpage
+\pagestyle{plain}
+
+\textbf{Завдання 3.} Припустимо, що база знань містить тільки одне висловлення
+$\exists x\; AsHighAs(x, Everest)$. Які з наведених нижче фактів є правильними
+результатами застосування правила конкретизації з квантором існування?
+
+\begin{itemize}
+    \item[а)] $AsHighAs(Everest, Everest).$
+    \item[б)] $AsHighAs(Kilimanjaro, Everest).$
+    \item[в)] $AsHighAs(Kilimanjaro, Everest) \land AsHighAs(BenNevis, Everest)$ \\
+    \hspace*{1.8em}(після двох застосувань).
+\end{itemize}
+
+\textbf{Розв'язок}:
+
+У варіанті а)
+\[
+    AsHighAs(Everest,Everest)
+\]
+
+як $x$ використано вже існуючу константу - $Everest$. Тому варіант
+неправельний.
+
+Інші висновки б) та в) коректні оскільки символи $Kilimanjaro$ та $BenNevis$ не
+були у базі даних.
+
+\textbf{Отже, відповідь}: б, в
+
+\vspace{1cm}
+\textbf{Завдання 6(г).} Ці питання стосуються питань підстановки та сколемізації.
+\begin{itemize}
+    \item[г)] Поширена помилка серед студентів полягає в тому, що при уніфікації
+              вони часто виконують підстановку терму замість константи Сколема,
+              а не підстановку терму замість змінної. Наприклад, вони говорять,
+              що формули $P(Sk1)$ і $P(A)$ можна уніфікувати за допомогою
+              підстановки ${Sk1/A}$. Наведіть приклад, коли це призводить до
+              неправильного висновку.
+\end{itemize}
+
+\textbf{Розв'язок}:
+
+Маємо висловлення $\exists x\; P(x)$, яке після сколемізації набуває вигляду
+$P(Sk1)$, де $Sk1$ — сколем-константа.
+
+Типовою помилкою є виконання підстановки $\{Sk1 / A\}$ з метою уніфікації
+$P(Sk1)$ та $P(A)$. Така підстановка передбачає, що $Sk1 = A$, тобто ми знаємо,
+що саме об'єкт $A$ задовольняє $P$. Однак це припущення необґрунтоване:
+сколем-константа означає лише факт існування, а не ідентичність з будь-яким
+конкретним термом. Тому така підстановка порушує логіку сколемізації.
+
+\textit{Приклад.}
+У базі знань маємо
+\[
+\exists x\; P(x)
+\]
+\[
+\neg P(A)
+\]
+
+Студент помилково уніфікує $P(Sk1)$ з $P(A)$ підстановкою $\{Sk1 / A\}$,
+і отримує протиріччя:
+\[
+P(A) \quad \text{і} \quad \neg P(A)
+\]
+
+Але оскільки ми не маємо підстав вважати, що $Sk1 = A$, це протиріччя
+не є логічно обґрунтованим.
+
+\vspace{1cm}
+\textbf{Завдання 13(б).} Сформулюйте на мові Prolog перелічені нижче питання
+щодо відношення parent, яке описано в підрозділі «Визначення відношень на снові
+фактів» у лекції 10 (див. рис. 22).
+
+\begin{itemize}
+    \item[б)] Чи має Ліз дитину?
+\end{itemize}
+
+\textbf{Розв'язок}:
+\begin{lstlisting}[language=Prolog]
+?- parent(liz, _).
+\end{lstlisting}
+
+\end{document}
