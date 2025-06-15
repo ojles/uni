@@ -291,38 +291,37 @@ class FEM():
         return dj
 
     def _MGE(self, el_idx):
-        a11_m, a22_m, a33_m = [], [], []
-        a12_m, a13_m, a23_m = [], [], []
+        a11, a22, a33 = [np.zeros((20, 20)) for _ in range(3)]
+        a12, a13, a23 = [np.zeros((20, 20)) for _ in range(3)]
+
         for i in range(20):
-            a11_m_line, a22_m_line, a33_m_line = [], [], []
-            a12_m_line, a13_m_line, a23_m_line = [], [], []
             for j in range(20):
-                a11, a22, a33 = 0, 0, 0
-                a12, a13, a23 = 0, 0, 0
                 gauss_i = 0
                 for cm in self.c:
                     for cn in self.c:
                         for ck in self.c:
-                            d_phi = self.DFIXYZ[el_idx]
-                            a11 += cm * cn * ck \
+                            d_phi = self.DFIXYZ[el_idx][gauss_i]
+
+                            a11[i][j] += cm * cn * ck \
                                     * (self.lambda_ * (1 - self.nu) * d_phi[i][0] * d_phi[j][0] \
                                        + self.mu * (d_phi[i][1] * d_phi[j][1] + d_phi[i][2] * d_phi[j][2])) \
                                        * self.DJ[el_idx][gauss_i]
-                            a22 += cm * cn * ck * \
+
+                            a22[i][j] += cm * cn * ck * \
                                        (self.lambda_ * (1 - self.nu) * (d_phi[i][1] * d_phi[j][1]) \
                                         + self.mu * (d_phi[i][0] * d_phi[j][0] + d_phi[i][2] * d_phi[j][2])) \
                                         * self.DJ[el_idx][gauss_i]
 
-                            a33 += cm * cn * ck * \
+                            a33[i][j] += cm * cn * ck * \
                                        (self.lambda_ * (1 - self.nu) * (d_phi[i][2] * d_phi[j][2]) \
                                         + self.mu * ((d_phi[i][0] * d_phi[j][0]) + (d_phi[i][1] * d_phi[j][1]))) \
                                         * self.DJ[el_idx][gauss_i]
 
-                            a12 += cm * cn * ck * (self.lambda_ * self.nu * (d_phi[i][0] * d_phi[j][1]) \
+                            a12[i][j] += cm * cn * ck * (self.lambda_ * self.nu * (d_phi[i][0] * d_phi[j][1]) \
                                     + self.mu * (d_phi[i][1] * d_phi[j][0])) \
                                     * self.DJ[el_idx][gauss_i]
 
-                            a13 += cm * cn * ck \
+                            a13[i][j] += cm * cn * ck \
                                     * (self.lambda_ * self.nu * (d_phi[i][0] * d_phi[j][2]) \
                                     + self.mu * (d_phi[i][2] * d_phi[j][0])) \
                                     * self.DJ[el_idx][gauss_i]
@@ -333,38 +332,12 @@ class FEM():
                                     * self.DJ[el_idx][gauss_i]
 
                             gauss_i = gauss_i + 1
-                a11_m_line.append(a11)
-                a22_m_line.append(a22)
-                a33_m_line.append(a33)
-                a12_m_line.append(a12)
-                a13_m_line.append(a13)
-                a23_m_line.append(a23)
-            a11_m.append(a11_m_line)
-            a22_m.append(a22_m_line)
-            a33_m.append(a33_m_line)
-            a12_m.append(a12_m_line)
-            a13_m.append(a13_m_line)
-            a23_m.append(a23_m_line)
 
-        m1 = np.array(a11_m)
-        m2 = np.array(a12_m)
-        m3 = np.array(a13_m)
-        m4 = np.array(a22_m)
-        m5 = np.array(a23_m)
-        m6 = np.array(a33_m)
-
-        mge = np.zeros((60, 60))
-        meg[:20, :20] = m1
-        meg[:20, 20:40] = m2
-        meg[:20, 40:] = m3
-        meg[20:40, :20] = m2.T
-        meg[20:40, 20:40] = m4
-        meg[20:40, 40:] = m5
-        meg[40:, :20] = m3.T
-        meg[40:, 20:40] = m5.T
-        meg[40:, 40:] = m6
-
-        return mge.tolist()
+        return np.block([
+                [a11, a12, a13],
+                [a12, a22, a23],
+                [a13, a23, a33]
+            ]).tolist()
 
     def DxyzDnt(self, xyz):
         result = []
