@@ -218,23 +218,23 @@ class FEM():
                     DFIABG.append(el)
         return DFIABG
 
-    def _dpsi_14(self, e, t, ei, ti):
-        return [
-            (1/4) * (t*ti + 1) * ei * (2*ei*e +   ti*t),
-            (1/4) * (ei*e + 1) * ti * (  ei*e + 2*ti*t)
-        ]
+    def _dpsi_deta_14(self, e, t, ei, ti):
+        return (1/4) * (t*ti + 1) * ei * (2*ei*e +   ti*t)
 
-    def _dpsi_57(self, e, t, ei, ti):
-        return [
-            (-t*ti - 1) * e,
-            (1/2) * (1 - e*e)*ti
-        ]
+    def _dpsi_dtao_14(self, e, t, ei, ti):
+        return (1/4) * (ei*e + 1) * ti * (  ei*e + 2*ti*t)
 
-    def _dpsi_68(self, e, t, ei, ti):
-        return [
-            (1/2) * (1 - t*t)*ei,
-            (-e*ei - 1)*t
-        ]
+    def _dpsi_deta_57(self, e, t, ei, ti):
+        return (-t*ti - 1) * e
+
+    def _dpsi_dtao_57(self, e, t, ei, ti):
+        return (1/2) * (1 - e*e)*ti
+
+    def _dpsi_deta_68(self, e, t, ei, ti):
+        return (1/2) * (1 - t*t)*ei
+
+    def _dpsi_dtao_68(self, e, t, ei, ti):
+        return (-e*ei - 1)*t
 
     def _DPSITE(self):
         DPSITE = []
@@ -243,11 +243,14 @@ class FEM():
                 el = []
                 for i, et in enumerate(face_local_coords):
                     if i < 4:
-                        el.append(self._dpsi_14(eta, tau, et[0], et[1]))
+                        el.append([self._dpsi_deta_14(eta, tau, et[0], et[1]),
+                                   self._dpsi_dtao_14(eta, tau, et[0], et[1])])
                     elif i == 4 or i == 6:
-                        el.append(self._dpsi_57(eta, tau, et[0], et[1]))
+                        el.append([self._dpsi_deta_57(eta, tau, et[0], et[1]),
+                                   self._dpsi_dtao_57(eta, tau, et[0], et[1])])
                     elif i == 5 or i == 7:
-                        el.append(self._dpsi_68(eta, tau, et[0], et[1]))
+                        el.append([self._dpsi_deta_68(eta, tau, et[0], et[1]),
+                                   self._dpsi_dtao_68(eta, tau, et[0], et[1])])
                 DPSITE.append(el)
 
     def _DXYZABG(self, el):
