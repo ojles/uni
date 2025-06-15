@@ -109,7 +109,7 @@ class FEM():
 
         self.DXYZABG = []
         for f_elem in self.finite_elements:
-             self.DXYZABG.append(self._DXYZABG(f_elem))
+            self.DXYZABG.append(self._DXYZABG(f_elem))
 
         self.DJ = []
         for dxyzabg in self.DXYZABG:
@@ -117,7 +117,7 @@ class FEM():
 
         self.DFIXYZ = []
         for elem_idx, _ in enumerate(self.finite_elements):
-             self.DFIXYZ.append(self._DFIXYZ(elem_idx))
+            self.DFIXYZ.append(self._DFIXYZ(elem_idx))
 
         FE = []
         for zp in self.ZP:
