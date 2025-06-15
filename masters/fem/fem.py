@@ -105,6 +105,8 @@ class FEM():
 
         self.DFIABG = self._DFIABG()
 
+        self.DPSITE = self._DPSITE()
+
         self.DXYZABG = []
         for f_elem in self.finite_elements:
              self.DXYZABG.append(self._DXYZABG(f_elem))
@@ -243,7 +245,7 @@ class FEM():
         return (-e*ei - 1)*t
 
     def _DPSITE(self):
-        DPSITE = []
+        dpsite = []
         for eta in [-sqrt06, 0, sqrt06]:
             for tau in [-sqrt06, 0, sqrt06]:
                 el = []
@@ -257,7 +259,8 @@ class FEM():
                     elif i == 5 or i == 7:
                         el.append([self._dpsi_deta_68(eta, tau, et[0], et[1]),
                                    self._dpsi_dtao_68(eta, tau, et[0], et[1])])
-                DPSITE.append(el)
+                dpsite.append(el)
+        return dpsite
 
     def _DXYZABG(self, el):
         DXYZABG = []
