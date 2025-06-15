@@ -121,6 +121,12 @@ class FEM():
         for zp in self.ZP:
             FE.append(self._FE(zp))
 
+        # Закріплюємо нижню грань
+        self.ZU = []
+        for point in self.AKT:
+            if point[2] == 0:
+                self.ZU.append(point)
+
     def _finite_element(self, x0, y0, z0):
         x1 = x0 + self.dx
         y1 = y0 + self.dy
