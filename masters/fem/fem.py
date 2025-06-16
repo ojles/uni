@@ -91,11 +91,6 @@ class FEM():
         # Finite elements array
         self.finite_elements = self._finite_elements()
 
-        self.ZP = []
-        elems_count = len(self.finite_elements)
-        for i in range(self.nx * self.ny):
-            self.ZP.append([elems_count - i - 1, 6, self.P])
-
         self.NT = self._NT()
 
         self.DFIABG = self._DFIABG()
@@ -119,10 +114,6 @@ class FEM():
         for point in self.AKT:
             if point[2] == 0:
                 self.ZU.append(point)
-
-        self.ZP = []
-        for element in self.finite_elements:
-            for point in element:
 
         FE = []
         for element in self.finite_elements:
