@@ -387,8 +387,8 @@ class FEM():
                         psi_i.append(self._psi_i_57(eta, tau, point[0], point[1]))
                     elif point_idx == 5 or point_idx == 7:
                         psi_i.append(self._psi_i_68(eta, tau, point[0], point[1]))
-                result.append(psi_i)
-        return result
+                PSI_I.append(psi_i)
+        return PSI_I
 
     def _FE(self, element):
 
