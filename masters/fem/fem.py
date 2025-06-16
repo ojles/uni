@@ -71,7 +71,7 @@ class FEM():
         self.nu = 0
         self.mu = 0
         self.lambda_ = 0
-        self.P = 0
+        self.P = 1
 
     def mesh(self):
         AKT = []
@@ -247,6 +247,15 @@ class FEM():
     def _dpsi_dtao_68(self, e, t, ei, ti):
         return (-e*ei - 1)*t
 
+    def _psi_i_14(self, e, t, ei, ti):
+        return (1/4) * (t*ti + 1) * (e*ei + 1) * (e*ei + ti*t - 1)
+
+    def _psi_i_57(self, e, t, ei, ti):
+        return (1/2) * (-e*e + 1) * (ti*t + 1)
+
+    def _psi_i_68(self, e, t, ei, ti):
+        return (1/2) * (-t*t + 1) * (ei*e + 1)
+
     def _DPSITE(self):
         dpsite = []
         for eta in [-sqrt06, 0, sqrt06]:
@@ -375,19 +384,19 @@ class FEM():
 
         return DXYZDNT
 
-    def DEPSIxyzDEnt(self):
-        result = []
+    def _PSIi(self):
+        PSI_I = []
         for eta in [-sqrt06, 0, sqrt06]:
             for tau in [-sqrt06, 0, sqrt06]:
-                a = []
-                for point in face_local_coords:
-                    if face_local_coords.index(point) < 4:
-                        a.append(self.PSINT_angel_main(eta, tau, point[0], point[1]))
-                    elif face_local_coords.index(point) == 4 or face_local_coords.index(point) == 6:
-                        a.append(self.PSINT_57_main(eta, tau, point[0], point[1]))
-                    elif face_local_coords.index(point) == 5 or face_local_coords.index(point) == 7:
-                        a.append(self.PSINT_68_main(eta, tau, point[0], point[1]))
-                result.append(a)
+                psi_i = []
+                for point_idx, point in enumerate(face_local_coords):
+                    if point_idx < 4:
+                        psi_i.append(self._psi_i_14(eta, tau, point[0], point[1]))
+                    elif point_idx == 4 or point_idx == 6:
+                        psi_i.append(self._psi_i_57(eta, tau, point[0], point[1]))
+                    elif point_idx == 5 or point_idx == 7:
+                        psi_i.append(self._psi_i_68(eta, tau, point[0], point[1]))
+                result.append(psi_i)
         return result
 
     def _FE(self, element):
@@ -396,30 +405,38 @@ class FEM():
         max_z = max([p[2] for p in element])
         surface = [p for p in element if p[2] == max_z]
 
-        DxyzDnt = self.DxyzDnt(surface)
-        DEPSIxyzDEnt = self.DEPSIxyzDEnt()
-        fe1 = []
-        fe2 = []
-        fe3 = []
-        for i in range(8):  # [-1, -1]
+        DXYZDNT = self._DXYZDNT(surface)
+        PSIi = self._PSIi()
+
+        fe1 = [0, 0, 0, 0, 0, 0, 0, 0]
+        fe2 = [0, 0, 0, 0, 0, 0, 0, 0]
+        fe3 = [0, 0, 0, 0, 0, 0, 0, 0]
+        for i in range(8):
             fe1_value = 0
             fe2_value = 0
             fe3_value = 0
-            iterator_for_help = 0
-            for m in self.c:
-                for n in self.c:
-                    DxyzDnt_item = DxyzDnt[iterator_for_help]
-                    DEPSIxyzDEnt_item = DEPSIxyzDEnt[iterator_for_help][i]
-                    fe1_value += m * n * P_val * (
+            gauss_i = 0
+            for cm in self.c:
+                for cn in self.c:
+                    DxyzDnt_item = DXYZDNT[gauss_i]
+                    DEPSIxyzDEnt_item = PSIi[gauss_i][i]
+
+                    fe1[i] += cm*cn*self.P * (
                             DxyzDnt_item[1][0] * DxyzDnt_item[2][1] - DxyzDnt_item[2][0] * DxyzDnt_item[1][1]) \
                                  * DEPSIxyzDEnt_item
-                    fe2_value += m * n * P_val * (
+                    fe2[i] += cm * cn * self.P * (
                             DxyzDnt_item[2][0] * DxyzDnt_item[0][1] - DxyzDnt_item[0][0] * DxyzDnt_item[2][1]) \
                                  * DEPSIxyzDEnt_item
-                    fe3_value += m * n * P_val * (
+                    fe3[i] += cm * cn * self.P * (
                             DxyzDnt_item[0][0] * DxyzDnt_item[1][1] - DxyzDnt_item[1][0] * DxyzDnt_item[0][1]) \
                                  * DEPSIxyzDEnt_item
-                    iterator_for_help += 1
-            fe1.append(fe1_value)
-            fe2.append(fe2_value)
-            fe3.append(fe3_value)
+
+                    gauss_i += 1
+
+        return [0, 0, 0, 0, fe1[0], fe1[1], fe1[2], fe1[3], 0, 0,
+                0, 0, 0, 0, 0, 0, fe1[4], fe1[5], fe1[6], fe1[7],
+                0, 0, 0, 0, fe2[0], fe2[1], fe2[2], fe2[3], 0, 0,
+                0, 0, 0, 0, 0, 0, fe2[4], fe2[5], fe2[6], fe2[7],
+                0, 0, 0, 0, fe3[0], fe3[1], fe3[2], fe3[3], 0, 0,
+                0, 0, 0, 0, 0, 0, fe3[4], fe3[5], fe3[6], fe3[7]]
+
