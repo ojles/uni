@@ -114,15 +114,23 @@ class FEM():
         for elem_idx, _ in enumerate(self.finite_elements):
             self.DFIXYZ.append(self._DFIXYZ(elem_idx))
 
-        FE = []
-        for zp in self.ZP:
-            FE.append(self._FE(zp))
-
         # Закріплюємо нижню грань
         self.ZU = []
         for point in self.AKT:
             if point[2] == 0:
                 self.ZU.append(point)
+
+        self.ZP = []
+        for element in self.finite_elements:
+            for point in element:
+
+        FE = []
+        for element in self.finite_elements:
+            if element[4][2] == self.az:
+                FE.append(self._FE(element))
+            else:
+                FE.append(np.zeros(60).tolist())
+
 
     def _finite_element(self, x0, y0, z0):
         x1 = x0 + self.dx
@@ -346,33 +354,72 @@ class FEM():
                 [a13, a23, a33]
             ]).tolist()
 
-    def DxyzDnt(self, xyz):
+    def _DXYZDNT(self, surface):
+        DXYZDNT = []
+        gauss_i = 0
+        for eta in [-sqrt06, 0, sqrt06]:
+            for tau in [-sqrt06, 0, sqrt06]:
+                dxyzdnt = [[0, 0],
+                           [0, 0],
+                           [0, 0]]
+                for point_idx, point in enumerate(surface):
+                    dxyzdnt[0][0] += point[0] * self.DPSITE[gauss_i][point_idx][0]
+                    dxyzdnt[0][1] += point[0] * self.DPSITE[gauss_i][point_idx][1]
+                    dxyzdnt[1][0] += point[1] * self.DPSITE[gauss_i][point_idx][0]
+                    dxyzdnt[1][1] += point[1] * self.DPSITE[gauss_i][point_idx][1]
+                    dxyzdnt[2][0] += point[2] * self.DPSITE[gauss_i][point_idx][0]
+                    dxyzdnt[2][1] += point[2] * self.DPSITE[gauss_i][point_idx][1]
+
+                DXYZDNT.append(dxyzdnt)
+                gauss_i += 1
+
+        return DXYZDNT
+
+    def DEPSIxyzDEnt(self):
         result = []
-        depsite = self.DPSITE()
-        index_for_depsite = 0
-        for eta in eta_for:
-            for tau in tau_for:
-                summ_x_eta = []
-                summ_y_eta = []
-                summ_z_eta = []
-                summ_x_tau = []
-                summ_y_tau = []
-                summ_z_tau = []
-                for point in xyz:
-                    index_of_nt = xyz.index(point)
-                    summ_x_eta.append(point[0] * depsite[index_for_depsite][index_of_nt][0])
-                    summ_y_eta.append(point[1] * depsite[index_for_depsite][index_of_nt][0])
-                    summ_z_eta.append(point[2] * depsite[index_for_depsite][index_of_nt][0])
-                    summ_x_tau.append(point[0] * depsite[index_for_depsite][index_of_nt][1])
-                    summ_y_tau.append(point[1] * depsite[index_for_depsite][index_of_nt][1])
-                    summ_z_tau.append(point[2] * depsite[index_for_depsite][index_of_nt][1])
-                result.append([
-                    [sum(summ_x_eta), sum(summ_x_tau)],
-                    [sum(summ_y_eta), sum(summ_y_tau)],
-                    [sum(summ_z_eta), sum(summ_z_tau)]
-                ])
-                index_for_depsite += 1
+        for eta in [-sqrt06, 0, sqrt06]:
+            for tau in [-sqrt06, 0, sqrt06]:
+                a = []
+                for point in face_local_coords:
+                    if face_local_coords.index(point) < 4:
+                        a.append(self.PSINT_angel_main(eta, tau, point[0], point[1]))
+                    elif face_local_coords.index(point) == 4 or face_local_coords.index(point) == 6:
+                        a.append(self.PSINT_57_main(eta, tau, point[0], point[1]))
+                    elif face_local_coords.index(point) == 5 or face_local_coords.index(point) == 7:
+                        a.append(self.PSINT_68_main(eta, tau, point[0], point[1]))
+                result.append(a)
         return result
 
-    def _FE(self, a):
-        pass
+    def _FE(self, element):
+
+        # Choose top surface
+        max_z = max([p[2] for p in element])
+        surface = [p for p in element if p[2] == max_z]
+
+        DxyzDnt = self.DxyzDnt(surface)
+        DEPSIxyzDEnt = self.DEPSIxyzDEnt()
+        fe1 = []
+        fe2 = []
+        fe3 = []
+        for i in range(8):  # [-1, -1]
+            fe1_value = 0
+            fe2_value = 0
+            fe3_value = 0
+            iterator_for_help = 0
+            for m in self.c:
+                for n in self.c:
+                    DxyzDnt_item = DxyzDnt[iterator_for_help]
+                    DEPSIxyzDEnt_item = DEPSIxyzDEnt[iterator_for_help][i]
+                    fe1_value += m * n * P_val * (
+                            DxyzDnt_item[1][0] * DxyzDnt_item[2][1] - DxyzDnt_item[2][0] * DxyzDnt_item[1][1]) \
+                                 * DEPSIxyzDEnt_item
+                    fe2_value += m * n * P_val * (
+                            DxyzDnt_item[2][0] * DxyzDnt_item[0][1] - DxyzDnt_item[0][0] * DxyzDnt_item[2][1]) \
+                                 * DEPSIxyzDEnt_item
+                    fe3_value += m * n * P_val * (
+                            DxyzDnt_item[0][0] * DxyzDnt_item[1][1] - DxyzDnt_item[1][0] * DxyzDnt_item[0][1]) \
+                                 * DEPSIxyzDEnt_item
+                    iterator_for_help += 1
+            fe1.append(fe1_value)
+            fe2.append(fe2_value)
+            fe3.append(fe3_value)
