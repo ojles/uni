@@ -88,11 +88,6 @@ class FEM():
         self.AKT = AKT
         self.nqp = len(AKT)
 
-        self.ZU = []
-        for point in self.AKT:
-            if point[2] == 0:
-                self.ZU.append(point)
-
         # Finite elements array
         self.finite_elements = self._finite_elements()
 
