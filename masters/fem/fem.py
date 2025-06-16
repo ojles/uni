@@ -348,7 +348,7 @@ class FEM():
 
     def DxyzDnt(self, xyz):
         result = []
-        depsite = self.DEPSITE()
+        depsite = self.DPSITE()
         index_for_depsite = 0
         for eta in eta_for:
             for tau in tau_for:
