@@ -67,11 +67,11 @@ class FEM():
 
         self.c = [5/9, 8/9, 5/9]
 
-        self.E = 0
-        self.nu = 0
-        self.mu = 0
-        self.lambda_ = 0
-        self.P = 1
+        self.E = 1
+        self.nu = 0.3
+        self.lambda_ = self.E / ((1 + self.nu) * (1 - 2 * self.nu))
+        self.mu = self.E / (2 * (1 + self.nu))
+        self.P = 0.5
 
     def mesh(self):
         AKT = []
