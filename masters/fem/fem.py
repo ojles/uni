@@ -130,6 +130,7 @@ class FEM():
 
         F = self._F(FE)
 
+        self.u = np.linalg.solve(MG, F)
 
     def _finite_element(self, x0, y0, z0):
         x1 = x0 + self.dx
