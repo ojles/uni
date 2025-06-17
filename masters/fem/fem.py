@@ -400,33 +400,35 @@ class FEM():
         fe2 = [0, 0, 0, 0, 0, 0, 0, 0]
         fe3 = [0, 0, 0, 0, 0, 0, 0, 0]
         for i in range(8):
-            fe1_value = 0
-            fe2_value = 0
-            fe3_value = 0
             gauss_i = 0
             for cm in self.c:
                 for cn in self.c:
                     dxyzdnt = DXYZDNT[gauss_i]
                     psi_i = PSIi[gauss_i][i]
 
-                    fe1[i] += cm*cn*self.P * (
-                            dxyzdnt[1][0] * dxyzdnt[2][1] - dxyzdnt[2][0] * dxyzdnt[1][1]) \
-                                 * psi_i
-                    fe2[i] += cm * cn * self.P * (
-                            dxyzdnt[2][0] * dxyzdnt[0][1] - dxyzdnt[0][0] * dxyzdnt[2][1]) \
-                                 * psi_i
-                    fe3[i] += cm * cn * self.P * (
-                            dxyzdnt[0][0] * dxyzdnt[1][1] - dxyzdnt[1][0] * dxyzdnt[0][1]) \
-                                 * psi_i
+                    fe1[i] += cm * cn * self.P * (dxyzdnt[1][0] * dxyzdnt[2][1] - dxyzdnt[2][0] * dxyzdnt[1][1]) * psi_i
+                    fe2[i] += cm * cn * self.P * (dxyzdnt[2][0] * dxyzdnt[0][1] - dxyzdnt[0][0] * dxyzdnt[2][1]) * psi_i
+                    fe3[i] += cm * cn * self.P * (dxyzdnt[0][0] * dxyzdnt[1][1] - dxyzdnt[1][0] * dxyzdnt[0][1]) * psi_i
 
                     gauss_i += 1
 
-        return [0, 0, 0, 0, fe1[0], fe1[1], fe1[2], fe1[3], 0, 0,
-                0, 0, 0, 0, 0, 0, fe1[4], fe1[5], fe1[6], fe1[7],
-                0, 0, 0, 0, fe2[0], fe2[1], fe2[2], fe2[3], 0, 0,
-                0, 0, 0, 0, 0, 0, fe2[4], fe2[5], fe2[6], fe2[7],
-                0, 0, 0, 0, fe3[0], fe3[1], fe3[2], fe3[3], 0, 0,
-                0, 0, 0, 0, 0, 0, fe3[4], fe3[5], fe3[6], fe3[7]]
+        return [0, 0, 0, 0,
+                fe1[0], fe1[1], fe1[2], fe1[3],
+                0, 0, 0, 0,
+                0, 0, 0, 0,
+                fe1[4], fe1[5], fe1[6], fe1[7],
+
+                0, 0, 0, 0,
+                fe2[0], fe2[1], fe2[2], fe2[3],
+                0, 0, 0, 0,
+                0, 0, 0, 0,
+                fe2[4], fe2[5], fe2[6], fe2[7],
+
+                0, 0, 0, 0,
+                fe3[0], fe3[1], fe3[2], fe3[3],
+                0, 0, 0, 0,
+                0, 0, 0, 0,
+                fe3[4], fe3[5], fe3[6], fe3[7]]
 
     def _MG(self, MGE):
         MG = np.zeros((3 * self.nqp, 3 * self.nqp)).tolist()
