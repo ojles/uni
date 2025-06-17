@@ -104,9 +104,9 @@ class FEM():
             if point[2] == 0:
                 self.ZU.append(point)
 
-        MGE = []
+        self.MGE = []
         for el_idx, _ in enumerate(self.finite_elements):
-            MGE.append(self._MGE(el_idx))
+            self.MGE.append(self._MGE(el_idx))
 
         FE = []
         for element in self.finite_elements:
@@ -115,7 +115,7 @@ class FEM():
             else:
                 FE.append(np.zeros(60).tolist())
 
-        MG = self._MG(MGE)
+        MG = self._MG(self.MGE)
 
         F = self._F(FE)
 
@@ -339,7 +339,7 @@ class FEM():
                                     + self.mu * (d_phi[i][2] * d_phi[j][0])) \
                                     * self.DJ[el_idx][gauss_i]
 
-                            a23 += cm * cn * ck \
+                            a23[i][j] += cm * cn * ck \
                                     * (self.lambda_ * self.nu * (d_phi[i][1] * d_phi[j][2]) \
                                     + self.mu * (d_phi[i][2] * d_phi[j][1])) \
                                     * self.DJ[el_idx][gauss_i]
@@ -436,7 +436,6 @@ class FEM():
         for mge_idx, mge in enumerate(MGE):
             for i in range(60):
                 for j in range(60):
-
                     mg_i = self.NT[mge_idx][i % 20] * 3 + (i // 20)
                     mg_j = self.NT[mge_idx][j % 20] * 3 + (j // 20)
                     MG[mg_i][mg_j] += mge[i][j]
