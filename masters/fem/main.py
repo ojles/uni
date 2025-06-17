@@ -119,37 +119,24 @@ class MainWindow(QMainWindow):
         for p_idx, p in enumerate(self.fem.u):
             points[p_idx // 3][p_idx % 3] += p
 
-        # Re-shape NT
-        nt = []
-        for el in self.fem.NT:
-            nt.append([20,
-                       el[3],  el[2],  el[1],  el[0],
-                       el[7],  el[6],  el[5],  el[4],
-                       el[10], el[9],  el[8],  el[11],
-                       el[18], el[17], el[16], el[19],
-                       el[15], el[14], el[13], el[12]])
 
-        cells_flat = np.array(nt).flatten()
-
-        # Локальні індекси вершин для ребер серендипового гексаедра
         serendip_edge_triplets = [
-            (0,  8, 1), (1,  9, 2), (2, 10, 3), (3, 11, 0),  # низ
-            (4, 12, 5), (5, 13, 6), (6, 14, 7), (7, 15, 4),  # верх
-            (0, 16, 4), (1, 17, 5), (2, 18, 6), (3, 19, 7)]  # боки
+            (0,  8, 1), (1,  9, 2), (2, 10, 3), (3, 11, 0),  # bottom
+            (4, 16, 5), (5, 17, 6), (6, 18, 7), (7, 19, 4),  # top
+            (0, 12, 4), (1, 13, 5), (2, 14, 6), (3, 15, 7)]  # middle
         lines = []
-        for element in nt:
+        for element in self.fem.NT:
             for i, j, k in serendip_edge_triplets:
                 lines.append(3)
-                lines.append(element[i+1])
-                lines.append(element[j+1])
-                lines.append(element[k+1])
+                lines.append(element[i])
+                lines.append(element[j])
+                lines.append(element[k])
 
         mesh = pv.PolyData()
         mesh.points = points
         mesh.lines = lines
         self.plotter.add_mesh(mesh, color='black', line_width=1)
         self.plotter.add_mesh(mesh.points, color='blue', point_size=8, render_points_as_spheres=True)
-
         self.plotter.add_axes()
 
     def remesh(self):
