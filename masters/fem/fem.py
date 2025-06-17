@@ -115,6 +115,10 @@ class FEM():
             if point[2] == 0:
                 self.ZU.append(point)
 
+        MGE = []
+        for el_idx, _ in enumerate(self.finite_elements):
+            MGE.append(self._MGE(el_idx))
+
         FE = []
         for element in self.finite_elements:
             if element[4][2] == self.az:
@@ -342,7 +346,7 @@ class FEM():
                                     * self.DJ[el_idx][gauss_i]
 
                             a23 += cm * cn * ck \
-                                    * (lambda_val * self.nu * (d_phi[i][1] * d_phi[j][2]) \
+                                    * (self.lambda_ * self.nu * (d_phi[i][1] * d_phi[j][2]) \
                                     + self.mu * (d_phi[i][2] * d_phi[j][1])) \
                                     * self.DJ[el_idx][gauss_i]
 
