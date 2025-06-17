@@ -401,7 +401,6 @@ class FEM():
         return PSI_I
 
     def _FE(self, element):
-
         # Choose top surface
         max_z = max([p[2] for p in element])
         surface = [p for p in element if p[2] == max_z]
@@ -419,18 +418,18 @@ class FEM():
             gauss_i = 0
             for cm in self.c:
                 for cn in self.c:
-                    DxyzDnt_item = DXYZDNT[gauss_i]
-                    DEPSIxyzDEnt_item = PSIi[gauss_i][i]
+                    dxyzdnt = DXYZDNT[gauss_i]
+                    psi_i = PSIi[gauss_i][i]
 
                     fe1[i] += cm*cn*self.P * (
-                            DxyzDnt_item[1][0] * DxyzDnt_item[2][1] - DxyzDnt_item[2][0] * DxyzDnt_item[1][1]) \
-                                 * DEPSIxyzDEnt_item
+                            dxyzdnt[1][0] * dxyzdnt[2][1] - dxyzdnt[2][0] * dxyzdnt[1][1]) \
+                                 * psi_i
                     fe2[i] += cm * cn * self.P * (
-                            DxyzDnt_item[2][0] * DxyzDnt_item[0][1] - DxyzDnt_item[0][0] * DxyzDnt_item[2][1]) \
-                                 * DEPSIxyzDEnt_item
+                            dxyzdnt[2][0] * dxyzdnt[0][1] - dxyzdnt[0][0] * dxyzdnt[2][1]) \
+                                 * psi_i
                     fe3[i] += cm * cn * self.P * (
-                            DxyzDnt_item[0][0] * DxyzDnt_item[1][1] - DxyzDnt_item[1][0] * DxyzDnt_item[0][1]) \
-                                 * DEPSIxyzDEnt_item
+                            dxyzdnt[0][0] * dxyzdnt[1][1] - dxyzdnt[1][0] * dxyzdnt[0][1]) \
+                                 * psi_i
 
                     gauss_i += 1
 
