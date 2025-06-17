@@ -129,40 +129,26 @@ class MainWindow(QMainWindow):
                        el[18], el[17], el[16], el[19],
                        el[15], el[14], el[13], el[12]])
 
-        num_cells = len(self.fem.finite_elements)
         cells_flat = np.array(nt).flatten()
-
 
         # Локальні індекси вершин для ребер серендипового гексаедра
         serendip_edge_triplets = [
             (0,  8, 1), (1,  9, 2), (2, 10, 3), (3, 11, 0),  # низ
             (4, 12, 5), (5, 13, 6), (6, 14, 7), (7, 15, 4),  # верх
-            (0, 16, 4), (1, 17, 5), (2, 18, 6), (3, 19, 7),  # боки
-        ]
-
+            (0, 16, 4), (1, 17, 5), (2, 18, 6), (3, 19, 7)]  # боки
+        lines = []
         for element in nt:
             for i, j, k in serendip_edge_triplets:
-                p0 = self.fem.AKT[element[i+1]]
-                pm = self.fem.AKT[element[j+1]]
-                p1 = self.fem.AKT[element[k+1]]
-                self.plotter.add_lines(np.array([p0, pm]), color="black", width=1)
-                self.plotter.add_lines(np.array([pm, p1]), color="black", width=1)
+                lines.append(3)
+                lines.append(element[i+1])
+                lines.append(element[j+1])
+                lines.append(element[k+1])
 
-        # Типи комірок
-        cell_types = np.full(num_cells, vtk_quadratic_hexahedron, dtype=np.uint8)
-
-        grid = pv.UnstructuredGrid(cells_flat, cell_types, points)
-
-        point_cloud = pv.PolyData(points)
-        self.plotter.add_mesh(point_cloud, color='blue', point_size=8, render_points_as_spheres=True)
-
-        #
-        # point lables
-        #
-        #for i, pt in enumerate(self.fem.AKT):
-            #self.plotter.add_point_labels(point_cloud, list(map(str, range(len(self.fem.AKT)))), point_size=0, font_size=12, text_color="blue", shape_opacity=0)
-
-        #self.plotter.add_mesh(grid, show_edges=True, style="wireframe", color="black", line_width=1)
+        mesh = pv.PolyData()
+        mesh.points = points
+        mesh.lines = lines
+        self.plotter.add_mesh(mesh, color='black', line_width=1)
+        self.plotter.add_mesh(mesh.points, color='blue', point_size=8, render_points_as_spheres=True)
 
         self.plotter.add_axes()
 
