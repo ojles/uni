@@ -29,7 +29,6 @@ class MainWindow(QMainWindow):
         self.fem = FEM(1,1,1,1,1,1)
         self.fem.mesh()
         self.display_mesh()
-
         # Side panel
         self.side_panel = self.create_side_panel()
 
@@ -83,7 +82,25 @@ class MainWindow(QMainWindow):
         cubemesh_hbox.addWidget(self.nz_input, 1)
         layout.addLayout(cubemesh_hbox)
 
-        update_btn = QPushButton("Оновити сітку")
+        layout.addWidget(QLabel("Константи (E, nu)"))
+        self.e_input = QLineEdit()
+        self.e_input.setText(str(self.fem.E))
+        self.e_input.setPlaceholderText("E")
+        self.nu_input = QLineEdit()
+        self.nu_input.setText(str(self.fem.nu))
+        self.nu_input.setPlaceholderText("nu")
+        constants_hbox = QHBoxLayout()
+        constants_hbox.addWidget(self.e_input, 1)
+        constants_hbox.addWidget(self.nu_input, 1)
+        layout.addLayout(constants_hbox)
+
+        layout.addWidget(QLabel("Навантаження"))
+        self.p_input = QLineEdit()
+        self.p_input.setText(str(self.fem.P))
+        self.p_input.setPlaceholderText("P")
+        layout.addWidget(self.p_input)
+
+        update_btn = QPushButton("Обчислити")
         update_btn.clicked.connect(self.remesh)
         layout.addWidget(update_btn)
 
@@ -111,7 +128,10 @@ class MainWindow(QMainWindow):
                 int(self.az_input.text()),
                 int(self.nx_input.text()),
                 int(self.ny_input.text()),
-                int(self.nz_input.text()))
+                int(self.nz_input.text()),
+                float(self.e_input.text()),
+                float(self.nu_input.text()),
+                float(self.p_input.text()))
         self.fem.mesh()
         camera_position = self.plotter.camera_position
         self.display_mesh()
