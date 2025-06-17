@@ -94,7 +94,11 @@ class MainWindow(QMainWindow):
     def display_mesh(self):
         self.plotter.clear()
 
-        points = self.fem.AKT
+        points = self.fem.AKT.copy()
+
+        for p_idx, p in enumerate(self.fem.u):
+            points[p_idx // 3][p_idx % 3] += p
+
         point_cloud = pv.PolyData(points)
         self.plotter.add_mesh(point_cloud, color='black', point_size=10, render_points_as_spheres=True)
 
