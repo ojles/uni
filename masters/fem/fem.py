@@ -126,6 +126,8 @@ class FEM():
             else:
                 FE.append(np.zeros(60).tolist())
 
+        MG = self._MG(MGE)
+
 
     def _finite_element(self, x0, y0, z0):
         x1 = x0 + self.dx
@@ -434,4 +436,26 @@ class FEM():
                 0, 0, 0, 0, 0, 0, fe2[4], fe2[5], fe2[6], fe2[7],
                 0, 0, 0, 0, fe3[0], fe3[1], fe3[2], fe3[3], 0, 0,
                 0, 0, 0, 0, 0, 0, fe3[4], fe3[5], fe3[6], fe3[7]]
+
+    def _MG(self, MGE):
+        MG = np.zeros((3 * self.nqp, 3 * self.nqp)).tolist()
+
+        for mge_idx, mge in enumerate(MGE):
+            for i in range(60):
+                for j in range(60):
+
+                    mg_i = self.NT[mge_idx][i % 20] * 3 + (i // 20)
+                    mg_j = self.NT[mge_idx][j % 20] * 3 + (j // 20)
+                    MG[mg_i][mg_j] += mge[i][j]
+
+        for i in self.ZU:
+            index_of_point = self.AKT.index(i)
+            ix = 3 * index_of_point + 0
+            iy = 3 * index_of_point + 1
+            iz = 3 * index_of_point + 2
+            MG[ix][ix] = 10000000000000000
+            MG[iy][iy] = 10000000000000000
+            MG[iz][iz] = 10000000000000000
+
+        return MG
 
