@@ -128,6 +128,8 @@ class FEM():
 
         MG = self._MG(MGE)
 
+        F = self._F(FE)
+
 
     def _finite_element(self, x0, y0, z0):
         x1 = x0 + self.dx
@@ -459,3 +461,12 @@ class FEM():
 
         return MG
 
+    def _F(self, FE):
+        F = np.zeros((self.nqp * 3)).tolist()
+
+        for fe_idx, fe in enumerate(FE):
+            for i in range(60):
+                f_idx = self.NT[fe_idx][i % 20] * 3 + (i // 20)
+                F[f_idx] += fe[i]
+
+        return F
