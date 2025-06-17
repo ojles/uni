@@ -26,7 +26,7 @@ class MainWindow(QMainWindow):
         self.plotter = QtInteractor(self)
         self.plotter.set_background("white")
         # Init FEM with default values
-        self.fem = FEM(2,2,3,1,1,2)
+        self.fem = FEM(1,1,1,1,1,1)
         self.fem.mesh()
         self.display_mesh()
 

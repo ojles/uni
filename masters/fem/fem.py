@@ -54,7 +54,7 @@ sqrt06 = math.sqrt(0.6)
 
 
 class FEM():
-    def __init__(self, ax, ay, az, nx, ny, nz):
+    def __init__(self, ax, ay, az, nx, ny, nz, E=1, nu=0.3, P=0.5):
         self.ax = ax
         self.ay = ay
         self.az = az
@@ -67,11 +67,12 @@ class FEM():
 
         self.c = [5/9, 8/9, 5/9]
 
-        self.E = 1
-        self.nu = 0.3
+        self.E = E
+        self.nu = nu
         self.lambda_ = self.E / ((1 + self.nu) * (1 - 2 * self.nu))
         self.mu = self.E / (2 * (1 + self.nu))
-        self.P = 0.5
+        self.P = P
+
 
     def mesh(self):
         AKT = []
