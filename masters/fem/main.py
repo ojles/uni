@@ -110,15 +110,72 @@ class MainWindow(QMainWindow):
         panel.setLayout(layout)
         return panel
 
+    def find_outer_faces(self, NT):
+        face_quads = [
+            [0, 1, 2, 3],  # bottom
+            [4, 5, 6, 7],  # top
+            [0, 1, 5, 4],  # front
+            [2, 3, 7, 6],  # back
+            [0, 3, 7, 4],  # left
+            [1, 2, 6, 5]]  # right
+
+        from collections import defaultdict
+        face_map = defaultdict(list)
+
+        for elem_id, element in enumerate(NT):
+            for face_id, face in enumerate(face_quads):
+                original_nodes = [element[i] for i in face]
+                key = tuple(sorted(original_nodes))
+                face_map[key].append((elem_id, face_id, original_nodes))
+
+        # залишаємо тільки ті, що трапляються один раз
+        outer_faces = []
+        for face_key, refs in face_map.items():
+            if len(refs) == 1:
+                outer_faces.append(refs[0])  # (elem_id, face_id, original_nodes)
+
+        return outer_faces
+
+    def build_outer_faces_polydata(self, AKT, NT):
+        outer_faces = self.find_outer_faces(NT)  # тут уже node_ids є
+
+        faces = []
+        for _, _, node_ids in outer_faces:
+            faces.append(4)
+            faces.extend(node_ids)
+        faces = np.array(faces)
+
+        grid = pv.PolyData(AKT, faces)
+        return grid, outer_faces
+
+    def callback(self, mesh):
+        if mesh is None or mesh.n_cells == 0:
+            print("mesh: None or 0")
+            return
+        picked_cell = mesh.cell_id
+        elem_id, face_id, node_ids = outer_faces[picked_cell]
+        print(f"Клікнута грань {face_id} елемента {elem_id}")
+        grid.cell_data["colors"] = np.array([
+            [255, 0, 0] if i == picked_cell else [255, 255, 255]
+            for i in range(grid.n_cells)
+        ])
+        actor.mapper.scalar_visibility = True
+        actor.mapper.lookup_table = None
+        grid.cell_data.active_scalars_name = "colors"
+        self.plotter.update()
+
     def display_mesh(self):
         self.plotter.clear()
 
         points = self.fem.AKT.copy()
 
         # Apply shift
-        for p_idx, p in enumerate(self.fem.u):
-            points[p_idx // 3][p_idx % 3] += p
+        #for p_idx, p in enumerate(self.fem.u):
+            #points[p_idx // 3][p_idx % 3] += p
 
+        grid, outer_faces = self.build_outer_faces_polydata(self.fem.AKT, self.fem.NT)
+        print("outer LEN:", len(outer_faces))
+        self.plotter.add_mesh(grid, show_edges=True, color="white", opacity=0.5)
 
         serendip_edge_triplets = [
             (0,  8, 1), (1,  9, 2), (2, 10, 3), (3, 11, 0),  # bottom
@@ -131,12 +188,13 @@ class MainWindow(QMainWindow):
                 lines.append(element[i])
                 lines.append(element[j])
                 lines.append(element[k])
-
         mesh = pv.PolyData()
         mesh.points = points
         mesh.lines = lines
+
         self.plotter.add_mesh(mesh, color='black', line_width=1)
         self.plotter.add_mesh(mesh.points, color='blue', point_size=8, render_points_as_spheres=True)
+        self.plotter.enable_cell_picking(callback=self.callback, through=False, show_message=True, show=True)
         self.plotter.add_axes()
 
     def remesh(self):
