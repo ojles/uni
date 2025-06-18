@@ -61,6 +61,8 @@ class FEM():
         self.mu = self.E / (2 * (1 + self.nu))
         self.P = P
 
+        self.AKT = []
+
 
     def mesh(self):
         AKT = []
@@ -81,6 +83,10 @@ class FEM():
         self.finite_elements = self._finite_elements()
 
         self.NT = self._NT()
+
+    def calc(self):
+        if len(self.AKT) == 0:
+            self.mesh()
 
         self.DFIABG = self._DFIABG()
 

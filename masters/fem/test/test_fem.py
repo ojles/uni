@@ -33,7 +33,7 @@ class TestFEM(unittest.TestCase):
 
     def test_mesh_1(self):
         fem = FEM(2, 2, 3, 1, 1, 2)
-        fem.mesh()
+        fem.calc()
         actual_mesh = np.array(fem.AKT)
 
         expected_mesh = np.array([
@@ -56,7 +56,7 @@ class TestFEM(unittest.TestCase):
 
     def test_mesh_2(self):
         fem = FEM(4, 10, 20, 3, 5, 10)
-        fem.mesh()
+        fem.calc()
         actual_mesh = np.array(fem.AKT)
 
         expected_mesh = np.array(mesh_reference_function(4, 10, 20, 3, 5, 10))

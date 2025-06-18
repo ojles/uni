@@ -5,7 +5,7 @@ import numpy as np
 import pyvista as pv
 from pyvistaqt import QtInteractor
 from PyQt5.QtWidgets import (
-    QApplication, QMainWindow, QWidget, QVBoxLayout,
+    QApplication, QMainWindow, QWidget, QVBoxLayout, QFrame,
     QHBoxLayout, QLineEdit, QLabel, QPushButton)
 from PyQt5.QtCore import Qt
 from PyQt5.QtGui import QIntValidator
@@ -27,12 +27,22 @@ class MainWindow(QMainWindow):
         # 3D viewer
         self.plotter = QtInteractor(self)
         self.plotter.set_background("white")
+        self.plotter.enable_cell_picking(
+            callback=self.on_pick,
+            through=False,
+            show_message=False,
+            show=False,
+            style='surface')
+
+        #
         # Init FEM with default values
         self.fem = FEM(1,1,1,1,1,1)
         self.fem.mesh()
         self.display_mesh()
         # Side panel
         self.side_panel = self.create_side_panel()
+        # Also init picked faces
+        self.picked_faces = []
 
         main_layout.addWidget(self.plotter, 3)
         main_layout.addWidget(self.side_panel, 1)
@@ -84,6 +94,16 @@ class MainWindow(QMainWindow):
         cubemesh_hbox.addWidget(self.nz_input, 1)
         layout.addLayout(cubemesh_hbox)
 
+        update_btn = QPushButton("Згенерувати сітку")
+        update_btn.clicked.connect(self.remesh)
+        layout.addWidget(update_btn)
+
+        line = QFrame()
+        line.setFrameShape(QFrame.HLine)
+        line.setFrameShadow(QFrame.Sunken)
+        layout.addWidget(line)
+        layout.addSpacing(10)
+
         layout.addWidget(QLabel("Константи (E, nu)"))
         self.e_input = QLineEdit()
         self.e_input.setText(str(self.fem.E))
@@ -101,10 +121,10 @@ class MainWindow(QMainWindow):
         self.p_input.setText(str(self.fem.P))
         self.p_input.setPlaceholderText("P")
         layout.addWidget(self.p_input)
-
         update_btn = QPushButton("Обчислити")
-        update_btn.clicked.connect(self.remesh)
+        update_btn.clicked.connect(self.calc)
         layout.addWidget(update_btn)
+
 
         layout.addStretch()
         panel.setLayout(layout)
@@ -137,7 +157,7 @@ class MainWindow(QMainWindow):
         return outer_faces
 
     def build_outer_faces_polydata(self, AKT, NT):
-        outer_faces = self.find_outer_faces(NT)  # тут уже node_ids є
+        outer_faces = self.find_outer_faces(NT)
 
         faces = []
         for _, _, node_ids in outer_faces:
@@ -148,21 +168,39 @@ class MainWindow(QMainWindow):
         grid = pv.PolyData(AKT, faces)
         return grid, outer_faces
 
-    def callback(self, mesh):
+    def on_pick(self, mesh):
         if mesh is None or mesh.n_cells == 0:
-            print("mesh: None or 0")
             return
-        picked_cell = mesh.cell_id
-        elem_id, face_id, node_ids = outer_faces[picked_cell]
-        print(f"Клікнута грань {face_id} елемента {elem_id}")
-        grid.cell_data["colors"] = np.array([
-            [255, 0, 0] if i == picked_cell else [255, 255, 255]
-            for i in range(grid.n_cells)
+
+        picked_face = mesh.extract_cells(0)
+        picked_center = picked_face.cell_centers().points[0]
+
+        for idx, (_, _, node_ids) in enumerate(self.outer_faces):
+            face_points = [self.fem.AKT[i] for i in node_ids]
+            face_center = np.mean(face_points, axis=0)
+            if np.allclose(face_center, picked_center, atol=1e-6):
+                picked_cell = idx
+                break
+        else:
+            print("Грань не знайдена.")
+            return
+
+        print(f"Клік по грані {picked_cell}")
+        try:
+            self.picked_faces.index(picked_cell)
+            self.picked_faces.remove(picked_cell)
+        except ValueError:
+            self.picked_faces.append(picked_cell)
+
+        self.grid.cell_data.active_scalars_name = "colors"
+        self.grid.cell_data["colors"] = np.array([
+            [0, 255, 0] if i in self.picked_faces else [255, 255, 255]
+            for i in range(self.grid.n_cells)
         ])
-        actor.mapper.scalar_visibility = True
-        actor.mapper.lookup_table = None
-        grid.cell_data.active_scalars_name = "colors"
+        self.actor.mapper.scalar_visibility = True
+        self.actor.mapper.lookup_table = None
         self.plotter.update()
+
 
     def display_mesh(self):
         self.plotter.clear()
@@ -173,9 +211,10 @@ class MainWindow(QMainWindow):
         #for p_idx, p in enumerate(self.fem.u):
             #points[p_idx // 3][p_idx % 3] += p
 
-        grid, outer_faces = self.build_outer_faces_polydata(self.fem.AKT, self.fem.NT)
-        print("outer LEN:", len(outer_faces))
-        self.plotter.add_mesh(grid, show_edges=True, color="white", opacity=0.5)
+        self.grid, self.outer_faces = self.build_outer_faces_polydata(self.fem.AKT, self.fem.NT)
+        colors = np.array([[255, 255, 255] for i in range(self.grid.n_cells)], dtype=np.uint8)
+        self.grid.cell_data["colors"] = colors
+        self.actor = self.plotter.add_mesh(self.grid, show_edges=True, rgb=True, opacity=0.9)
 
         serendip_edge_triplets = [
             (0,  8, 1), (1,  9, 2), (2, 10, 3), (3, 11, 0),  # bottom
@@ -194,10 +233,10 @@ class MainWindow(QMainWindow):
 
         self.plotter.add_mesh(mesh, color='black', line_width=1)
         self.plotter.add_mesh(mesh.points, color='blue', point_size=8, render_points_as_spheres=True)
-        self.plotter.enable_cell_picking(callback=self.callback, through=False, show_message=True, show=True)
         self.plotter.add_axes()
 
     def remesh(self):
+        self.picked_faces = []
         self.fem = FEM(
                 int(self.ax_input.text()),
                 int(self.ay_input.text()),
@@ -212,6 +251,9 @@ class MainWindow(QMainWindow):
         camera_position = self.plotter.camera_position
         self.display_mesh()
         self.plotter.camera_position = camera_position
+
+    def calc(self):
+        pass
 
 
 if __name__ == "__main__":

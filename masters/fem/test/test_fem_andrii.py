@@ -26,7 +26,7 @@ def read_csv_and_round(file_path, round_to):
 class TestFEM_FromAndrii(unittest.TestCase):
     def test_dfiabg(self):
         fem = FEM(1,1,1,1,1,1,1,0.3,1)
-        fem.mesh()
+        fem.calc()
         dfiabg = np.array(fem.DFIABG)
 
         round_to = 5
@@ -42,7 +42,7 @@ class TestFEM_FromAndrii(unittest.TestCase):
 
     def test_jakobians(self):
         fem = FEM(1,1,1,2,2,2,1,0.3,1)
-        fem.mesh()
+        fem.calc()
         print(len(fem.DXYZABG))
         print(np.array(fem.DXYZABG).shape)
         print(np.array(fem.DXYZABG))
