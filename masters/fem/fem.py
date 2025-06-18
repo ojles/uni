@@ -37,6 +37,15 @@ face_local_coords = [
         [-1, 0]
     ]
 
+face_id_idxs = [
+        [0, 1, 2, 3, 8, 9, 10, 11],  # bottom
+        [4, 5, 6, 7, 16, 17, 18, 19],  # top
+        [0, 1, 5, 4, 8, 13, 16, 12],  # front
+        [2, 3, 7, 6, 10, 15, 18, 14],  # back
+        [0, 3, 7, 4, 11, 15, 19, 12],  # left
+        [1, 2, 6, 5, 9, 14, 17, 13]  # right
+    ]
+
 
 sqrt06 = math.sqrt(0.6)
 
@@ -84,17 +93,24 @@ class FEM():
 
         self.NT = self._NT()
 
-    def calc(self):
+    def calc(self, zp, zu):
         if len(self.AKT) == 0:
             self.mesh()
 
+        self.ZU = zu
+
         self.DFIABG = self._DFIABG()
+        print("fem: DFIABG done.")
 
         self.DPSITE = self._DPSITE()
+        print("fem: DPSITE done.")
 
         self.DXYZABG = []
-        for f_elem in self.finite_elements:
+        len_felem = len(self.finite_elements)
+        for fidx, f_elem in enumerate(self.finite_elements):
+            print(f"fem: DXYZABG el ({fidx}/{len_felem})")
             self.DXYZABG.append(self._DXYZABG(f_elem))
+        print("fem: DXYZABG done.")
 
         self.DJ = []
         for dxyzabg in self.DXYZABG:
@@ -102,17 +118,15 @@ class FEM():
 
         self.DFIXYZ = []
         for elem_idx, _ in enumerate(self.finite_elements):
+            print(f"fem: DFIXYZ el ({elem_idx}/{len_felem})")
             self.DFIXYZ.append(self._DFIXYZ(elem_idx))
-
-        # Закріплюємо нижню грань
-        self.ZU = []
-        for point in self.AKT:
-            if point[2] == 0:
-                self.ZU.append(point)
+        print("fem: DFIXYZ done.")
 
         self.MGE = []
         for el_idx, _ in enumerate(self.finite_elements):
+            print(f"fem: MGE el ({el_idx}/{len_felem})")
             self.MGE.append(self._MGE(el_idx))
+        print("fem: MGE done.")
 
         FE = []
         for element in self.finite_elements:
@@ -120,12 +134,16 @@ class FEM():
                 FE.append(self._FE(element))
             else:
                 FE.append(np.zeros(60).tolist())
+        print("fem: FE done.")
 
         MG = self._MG(self.MGE)
+        print("fem: MG done.")
 
         F = self._F(FE)
+        print("fem: F done.")
 
         self.u = np.linalg.solve(MG, F)
+        print("fem: Solved.")
 
     def _finite_element(self, x0, y0, z0):
         x1 = x0 + self.dx
@@ -446,14 +464,16 @@ class FEM():
                     mg_j = self.NT[mge_idx][j % 20] * 3 + (j // 20)
                     MG[mg_i][mg_j] += mge[i][j]
 
-        for i in self.ZU:
-            index_of_point = self.AKT.index(i)
-            ix = 3 * index_of_point + 0
-            iy = 3 * index_of_point + 1
-            iz = 3 * index_of_point + 2
-            MG[ix][ix] = 10000000000000000
-            MG[iy][iy] = 10000000000000000
-            MG[iz][iz] = 10000000000000000
+        for elem_id, face_id in self.ZU:
+            el = self.finite_elements[elem_id]
+            for local_point in face_id_idxs[face_id]:
+                point = self.NT[elem_id][local_point]
+                ix = 3 * point + 0
+                iy = 3 * point + 1
+                iz = 3 * point + 2
+                MG[ix][ix] = 10000000000000000
+                MG[iy][iy] = 10000000000000000
+                MG[iz][iz] = 10000000000000000
 
         return MG
 

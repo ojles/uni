@@ -241,19 +241,20 @@ class MainWindow(QMainWindow):
         self.plotter.update()
 
 
-    def display_mesh(self):
+    def display_mesh(self, apply_shift=False):
         self.plotter.clear()
 
         points = self.fem.AKT.copy()
 
-        # Apply shift
-        #for p_idx, p in enumerate(self.fem.u):
-            #points[p_idx // 3][p_idx % 3] += p
+        if apply_shift:
+            for p_idx, p in enumerate(self.fem.u):
+                points[p_idx // 3][p_idx % 3] += p
 
-        self.grid, self.outer_faces = self.build_outer_faces_polydata(self.fem.AKT, self.fem.NT)
-        colors = np.array([[255, 255, 255] for i in range(self.grid.n_cells)], dtype=np.uint8)
-        self.grid.cell_data["colors"] = colors
-        self.actor = self.plotter.add_mesh(self.grid, show_edges=True, rgb=True, opacity=0.9)
+        if not apply_shift:
+            self.grid, self.outer_faces = self.build_outer_faces_polydata(self.fem.AKT, self.fem.NT)
+            colors = np.array([[255, 255, 255] for i in range(self.grid.n_cells)], dtype=np.uint8)
+            self.grid.cell_data["colors"] = colors
+            self.actor = self.plotter.add_mesh(self.grid, show_edges=True, rgb=True, opacity=0.9)
 
         serendip_edge_triplets = [
             (0,  8, 1), (1,  9, 2), (2, 10, 3), (3, 11, 0),  # bottom
@@ -293,7 +294,19 @@ class MainWindow(QMainWindow):
         self.plotter.camera_position = camera_position
 
     def calc(self):
-        pass
+        #if len(self.picked_faces_p) == 0 or len(self.picked_faces_u) == 0:
+            #return
+
+        zu = []
+        print("U faces:", self.picked_faces_u)
+        for uface in self.picked_faces_u:
+            zu.append((self.outer_faces[uface][0], self.outer_faces[uface][1]))
+        zu = list(set(zu))
+        print("zu:", zu)
+
+        self.fem.mesh()
+        self.fem.calc([], zu)
+        self.display_mesh(True)
 
 
 if __name__ == "__main__":
