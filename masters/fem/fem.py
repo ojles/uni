@@ -38,6 +38,15 @@ face_local_coords = [
     ]
 
 face_id_idxs = [
+        [3, 2, 1, 0, 10, 9, 8, 11],  # bottom
+        [7, 6, 5, 4, 18, 17, 16, 19],  # top
+        [0, 1, 5, 4, 8, 13, 16, 12],  # front
+        [3, 2, 6, 7, 10, 14, 18, 15],  # back
+        [3, 0, 4, 7, 11, 12, 19, 15],  # left
+        [1, 2, 6, 5, 9, 14, 17, 13]  # right
+    ]
+"""
+face_id_idxs = [
         [0, 1, 2, 3, 8, 9, 10, 11],  # bottom
         [4, 5, 6, 7, 16, 17, 18, 19],  # top
         [0, 1, 5, 4, 8, 13, 16, 12],  # front
@@ -45,6 +54,7 @@ face_id_idxs = [
         [0, 3, 7, 4, 11, 15, 19, 12],  # left
         [1, 2, 6, 5, 9, 14, 17, 13]  # right
     ]
+"""
 
 
 sqrt06 = math.sqrt(0.6)
@@ -93,9 +103,13 @@ class FEM():
 
         self.NT = self._NT()
 
-    def calc(self, zp, zu):
+    def calc(self, _E, _nu, _P, zp, zu):
         if len(self.AKT) == 0:
             self.mesh()
+
+        self.E = _E
+        self.nu = _nu
+        self.P = _P
 
         self.ZU = zu
 

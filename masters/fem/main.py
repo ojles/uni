@@ -305,7 +305,10 @@ class MainWindow(QMainWindow):
         print("zu:", zu)
 
         self.fem.mesh()
-        self.fem.calc([], zu)
+        self.fem.calc(
+                float(self.e_input.text()),
+                float(self.nu_input.text()),
+                float(self.p_input.text()), [], zu)
         self.display_mesh(True)
 
 
