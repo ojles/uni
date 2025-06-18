@@ -6,7 +6,7 @@ import pyvista as pv
 from pyvistaqt import QtInteractor
 from PyQt5.QtWidgets import (
     QApplication, QMainWindow, QWidget, QVBoxLayout, QFrame,
-    QHBoxLayout, QLineEdit, QLabel, QPushButton)
+    QHBoxLayout, QLineEdit, QLabel, QPushButton, QRadioButton, QButtonGroup)
 from PyQt5.QtCore import Qt
 from PyQt5.QtGui import QIntValidator
 from vtk import VTK_QUADRATIC_HEXAHEDRON
@@ -42,7 +42,8 @@ class MainWindow(QMainWindow):
         # Side panel
         self.side_panel = self.create_side_panel()
         # Also init picked faces
-        self.picked_faces = []
+        self.picked_faces_p = []
+        self.picked_faces_u = []
 
         main_layout.addWidget(self.plotter, 3)
         main_layout.addWidget(self.side_panel, 1)
@@ -125,6 +126,24 @@ class MainWindow(QMainWindow):
         update_btn.clicked.connect(self.calc)
         layout.addWidget(update_btn)
 
+        ##############################################3
+        line = QFrame()
+        line.setFrameShape(QFrame.HLine)
+        line.setFrameShadow(QFrame.Sunken)
+        layout.addWidget(line)
+        layout.addSpacing(15)
+        layout.addWidget(QLabel("Задання області Г"))
+        self.radio_p = QRadioButton("P")
+        self.radio_p.setChecked(True)
+        self.radio_u = QRadioButton("Закріпити")
+        group = QButtonGroup(panel)
+        group.addButton(self.radio_p)
+        group.addButton(self.radio_u)
+        somebox = QHBoxLayout()
+        somebox.addWidget(self.radio_p, 1)
+        somebox.addWidget(self.radio_u, 1)
+        layout.addLayout(somebox)
+        ###############################################
 
         layout.addStretch()
         panel.setLayout(layout)
@@ -186,17 +205,37 @@ class MainWindow(QMainWindow):
             return
 
         print(f"Клік по грані {picked_cell}")
+        if self.radio_p.isChecked():
+            pfaces = self.picked_faces_p
+            otherfaces = self.picked_faces_u
+        else:
+            pfaces = self.picked_faces_u
+            otherfaces = self.picked_faces_p
         try:
-            self.picked_faces.index(picked_cell)
-            self.picked_faces.remove(picked_cell)
+            pfaces.index(picked_cell)
+            pfaces.remove(picked_cell)
         except ValueError:
-            self.picked_faces.append(picked_cell)
+            try:
+                # This face is already used
+                otherfaces.index(picked_cell)
+                otherfaces.remove(picked_cell)
+                pfaces.append(picked_cell)
+            except ValueError:
+                pfaces.append(picked_cell)
+
+        print("pface:", pfaces)
+        print("otherfaces:", otherfaces)
 
         self.grid.cell_data.active_scalars_name = "colors"
-        self.grid.cell_data["colors"] = np.array([
-            [0, 255, 0] if i in self.picked_faces else [255, 255, 255]
-            for i in range(self.grid.n_cells)
-        ])
+        _colors = []
+        for i in range(self.grid.n_cells):
+            if i in self.picked_faces_p:
+                _colors.append([0, 255, 0])
+            elif i in self.picked_faces_u:
+                _colors.append([255, 0, 0])
+            else:
+                _colors.append([255, 255, 255])
+        self.grid.cell_data["colors"] = np.array(_colors)
         self.actor.mapper.scalar_visibility = True
         self.actor.mapper.lookup_table = None
         self.plotter.update()
@@ -236,7 +275,8 @@ class MainWindow(QMainWindow):
         self.plotter.add_axes()
 
     def remesh(self):
-        self.picked_faces = []
+        self.picked_faces_p = []
+        self.picked_faces_u = []
         self.fem = FEM(
                 int(self.ax_input.text()),
                 int(self.ay_input.text()),
