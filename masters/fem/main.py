@@ -36,7 +36,7 @@ class MainWindow(QMainWindow):
 
         #
         # Init FEM with default values
-        self.fem = FEM(1,1,1,1,1,1)
+        self.fem = FEM(2,2,2,2,2,2)
         self.fem.mesh()
         self.display_mesh()
         # Side panel
@@ -304,11 +304,18 @@ class MainWindow(QMainWindow):
         zu = list(set(zu))
         print("zu:", zu)
 
+        zp = []
+        print("P faces:", self.picked_faces_p)
+        for pface in self.picked_faces_p:
+            zp.append((self.outer_faces[pface][0], self.outer_faces[pface][1]))
+        zp = list(set(zp))
+        print("zp:", zp)
+
         self.fem.mesh()
         self.fem.calc(
                 float(self.e_input.text()),
                 float(self.nu_input.text()),
-                float(self.p_input.text()), [], zu)
+                float(self.p_input.text()), zp, zu)
         self.display_mesh(True)
 
 

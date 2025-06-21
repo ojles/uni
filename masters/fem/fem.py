@@ -45,16 +45,6 @@ face_id_idxs = [
         [3, 0, 4, 7, 11, 12, 19, 15],  # left
         [1, 2, 6, 5, 9, 14, 17, 13]  # right
     ]
-"""
-face_id_idxs = [
-        [0, 1, 2, 3, 8, 9, 10, 11],  # bottom
-        [4, 5, 6, 7, 16, 17, 18, 19],  # top
-        [0, 1, 5, 4, 8, 13, 16, 12],  # front
-        [2, 3, 7, 6, 10, 15, 18, 14],  # back
-        [0, 3, 7, 4, 11, 15, 19, 12],  # left
-        [1, 2, 6, 5, 9, 14, 17, 13]  # right
-    ]
-"""
 
 
 sqrt06 = math.sqrt(0.6)
@@ -112,6 +102,7 @@ class FEM():
         self.P = _P
 
         self.ZU = zu
+        self.ZP = zp
 
         self.DFIABG = self._DFIABG()
         print("fem: DFIABG done.")
@@ -143,11 +134,11 @@ class FEM():
         print("fem: MGE done.")
 
         FE = []
-        for element in self.finite_elements:
-            if element[4][2] == self.az:
-                FE.append(self._FE(element))
-            else:
-                FE.append(np.zeros(60).tolist())
+        for _ in range(len_felem):
+            FE.append(np.zeros(60).tolist())
+        for elem_id, face_id in self.ZP:
+            print(" <<<<<<< FACE")
+            FE[elem_id] = self._FE(self.finite_elements[elem_id], face_id)
         print("fem: FE done.")
 
         MG = self._MG(self.MGE)
@@ -426,47 +417,37 @@ class FEM():
                 PSI_I.append(psi_i)
         return PSI_I
 
-    def _FE(self, element):
+    def _FE(self, element, face_id):
         # Choose top surface
-        max_z = max([p[2] for p in element])
-        surface = [p for p in element if p[2] == max_z]
+        face_idxs = face_id_idxs[face_id]
+        surface = [element[i] for i in face_idxs]
 
         DXYZDNT = self._DXYZDNT(surface)
         PSIi = self._PSIi()
 
-        fe1 = [0, 0, 0, 0, 0, 0, 0, 0]
-        fe2 = [0, 0, 0, 0, 0, 0, 0, 0]
-        fe3 = [0, 0, 0, 0, 0, 0, 0, 0]
+        fe = np.zeros(60).tolist()
         for i in range(8):
             gauss_i = 0
+
+            f1 = 0
+            f2 = 0
+            f3 = 0
             for cm in self.c:
                 for cn in self.c:
                     dxyzdnt = DXYZDNT[gauss_i]
                     psi_i = PSIi[gauss_i][i]
 
-                    fe1[i] += cm * cn * self.P * (dxyzdnt[1][0] * dxyzdnt[2][1] - dxyzdnt[2][0] * dxyzdnt[1][1]) * psi_i
-                    fe2[i] += cm * cn * self.P * (dxyzdnt[2][0] * dxyzdnt[0][1] - dxyzdnt[0][0] * dxyzdnt[2][1]) * psi_i
-                    fe3[i] += cm * cn * self.P * (dxyzdnt[0][0] * dxyzdnt[1][1] - dxyzdnt[1][0] * dxyzdnt[0][1]) * psi_i
+                    f1 += cm * cn * self.P * (dxyzdnt[1][0] * dxyzdnt[2][1] - dxyzdnt[2][0] * dxyzdnt[1][1]) * psi_i
+                    f2 += cm * cn * self.P * (dxyzdnt[2][0] * dxyzdnt[0][1] - dxyzdnt[0][0] * dxyzdnt[2][1]) * psi_i
+                    f3 += cm * cn * self.P * (dxyzdnt[0][0] * dxyzdnt[1][1] - dxyzdnt[1][0] * dxyzdnt[0][1]) * psi_i
 
                     gauss_i += 1
 
-        return [0, 0, 0, 0,
-                fe1[0], fe1[1], fe1[2], fe1[3],
-                0, 0, 0, 0,
-                0, 0, 0, 0,
-                fe1[4], fe1[5], fe1[6], fe1[7],
+            fe[face_idxs[i]] = f1
+            fe[face_idxs[i] + 20] = f2
+            fe[face_idxs[i] + 40] = f3
 
-                0, 0, 0, 0,
-                fe2[0], fe2[1], fe2[2], fe2[3],
-                0, 0, 0, 0,
-                0, 0, 0, 0,
-                fe2[4], fe2[5], fe2[6], fe2[7],
-
-                0, 0, 0, 0,
-                fe3[0], fe3[1], fe3[2], fe3[3],
-                0, 0, 0, 0,
-                0, 0, 0, 0,
-                fe3[4], fe3[5], fe3[6], fe3[7]]
+        return fe
 
     def _MG(self, MGE):
         MG = np.zeros((3 * self.nqp, 3 * self.nqp)).tolist()
@@ -485,9 +466,9 @@ class FEM():
                 ix = 3 * point + 0
                 iy = 3 * point + 1
                 iz = 3 * point + 2
-                MG[ix][ix] = 10000000000000000
-                MG[iy][iy] = 10000000000000000
-                MG[iz][iz] = 10000000000000000
+                MG[ix][ix] = float(10 ** 50)
+                MG[iy][iy] = float(10 ** 50)
+                MG[iz][iz] = float(10 ** 50)
 
         return MG
 
