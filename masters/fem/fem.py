@@ -64,14 +64,16 @@ class FEM():
 
         self.c = [5/9, 8/9, 5/9]
 
+        self.set_params(E, nu, P)
+
+        self.AKT = []
+
+    def set_params(self, E, nu, P):
         self.E = E
         self.nu = nu
         self.lambda_ = self.E / ((1 + self.nu) * (1 - 2 * self.nu))
         self.mu = self.E / (2 * (1 + self.nu))
         self.P = P
-
-        self.AKT = []
-
 
     def mesh(self):
         AKT = []
@@ -93,13 +95,11 @@ class FEM():
 
         self.NT = self._NT()
 
-    def calc(self, _E, _nu, _P, zp, zu):
+    def calc(self, E, nu, P, zp, zu):
         if len(self.AKT) == 0:
             self.mesh()
 
-        self.E = _E
-        self.nu = _nu
-        self.P = _P
+        self.set_params(E, nu, P)
 
         self.ZU = zu
         self.ZP = zp
@@ -132,6 +132,8 @@ class FEM():
             print(f"fem: MGE el ({el_idx}/{len_felem})")
             self.MGE.append(self._MGE(el_idx))
         print("fem: MGE done.")
+        one_mge = self.MGE[1]
+
 
         FE = []
         for _ in range(len_felem):

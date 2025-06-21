@@ -11,9 +11,10 @@ from PyQt5.QtCore import Qt
 from PyQt5.QtGui import QIntValidator
 from vtk import VTK_QUADRATIC_HEXAHEDRON
 
-vtk_quadratic_hexahedron = 25
-
 from fem import FEM
+
+
+vtk_quadratic_hexahedron = 25
 
 
 class MainWindow(QMainWindow):
