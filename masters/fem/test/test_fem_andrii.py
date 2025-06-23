@@ -18,7 +18,7 @@ def read_csv_and_round(file_path, round_to):
     with open(file_path, 'r', newline='') as file:
         reader = csv.reader(file)
         for row in reader:
-            rounded_row = [round(float(value), round_to) for value in row]
+            rounded_row = [round(float(value.strip()), round_to) for value in row]
             data.append(rounded_row)
     return data
 
@@ -46,6 +46,13 @@ class TestFEM_FromAndrii(unittest.TestCase):
         print(len(fem.DXYZABG))
         print(np.array(fem.DXYZABG).shape)
         print(np.array(fem.DXYZABG))
+
+    def test_local_mg(self):
+        round_to = 4
+        actual = read_csv_and_round('local_mg0.csv', round_to)
+        expected = read_csv_and_round('local_mg0_expected.csv', round_to)
+
+        npt.assert_array_equal(actual, expected)
 
     def test_mges_are_same(self):
         fem = FEM(1,3,1,1,3,1)

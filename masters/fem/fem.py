@@ -51,7 +51,7 @@ sqrt06 = math.sqrt(0.6)
 
 
 class FEM():
-    def __init__(self, ax, ay, az, nx, ny, nz, E=1, nu=0.3, P=0.5):
+    def __init__(self, ax, ay, az, nx, ny, nz, E=2, nu=0.3, P=0.05):
         self.ax = ax
         self.ay = ay
         self.az = az
@@ -80,12 +80,16 @@ class FEM():
         x_scale = self.dx / 2
         y_scale = self.dy / 2
         z_scale = self.dz / 2
+        print("AKT")
         for iz in range(self.nz * 2 + 1):
             y_step = 1 + (iz % 2)
             for iy in range(0, self.ny * 2 + 1, y_step):
                 x_step = 1 + ((iy + iz) % 2)
                 for ix in range(0, self.nx * 2 + 1, x_step):
                     AKT.append([ix*x_scale, iy*y_scale, iz*z_scale])
+
+        for akt_idx, akt in enumerate(AKT):
+            print(akt_idx, ":", akt)
 
         self.AKT = AKT
         self.nqp = len(AKT)
@@ -94,6 +98,10 @@ class FEM():
         self.finite_elements = self._finite_elements()
 
         self.NT = self._NT()
+        for nt in self.NT:
+            for el in nt:
+                print(el, ",", sep="", end="")
+            print()
 
     def calc(self, E, nu, P, zp, zu):
         if len(self.AKT) == 0:
@@ -131,8 +139,11 @@ class FEM():
         for el_idx, _ in enumerate(self.finite_elements):
             print(f"fem: MGE el ({el_idx}/{len_felem})")
             self.MGE.append(self._MGE(el_idx))
+        for mge in self.MGE[0]:
+            for x in mge:
+                print(x, ",", end="")
+            print()
         print("fem: MGE done.")
-
 
         FE = []
         for _ in range(len_felem):
@@ -144,11 +155,18 @@ class FEM():
 
         MG = self._MG(self.MGE)
         print("fem: MG done.")
+        #for mg in MG:
+            #for x in mg:
+                #print(x, ",", end="")
+            #print()
 
         F = self._F(FE)
         print("fem: F done.")
 
         self.u = np.linalg.solve(MG, F)
+        print("len:", len(self.u)/3)
+        for ui in range(int(len(self.u)/3)):
+            print(self.u[ui*3], ",", self.u[ui*3 + 1], ",", self.u[ui*3 + 2])
         print("fem: Solved.")
 
     def _finite_element(self, x0, y0, z0):
@@ -459,6 +477,7 @@ class FEM():
                     mg_i = self.NT[mge_idx][i % 20] * 3 + (i // 20)
                     mg_j = self.NT[mge_idx][j % 20] * 3 + (j // 20)
                     MG[mg_i][mg_j] += mge[i][j]
+                    #print(mge_idx, ",", mg_i, ",", mg_j, ",", i, ",", j, ",", MG[mg_i][mg_j], sep="")
 
         for elem_id, face_id in self.ZU:
             el = self.finite_elements[elem_id]
