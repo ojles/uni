@@ -6,6 +6,7 @@ import pyvista as pv
 from pyvistaqt import QtInteractor
 from PyQt5.QtWidgets import (
     QApplication, QMainWindow, QWidget, QVBoxLayout, QFrame,
+    QToolButton, QSizePolicy, QGroupBox,
     QHBoxLayout, QLineEdit, QLabel, QPushButton, QRadioButton, QButtonGroup)
 from PyQt5.QtCore import Qt
 from PyQt5.QtGui import QIntValidator
@@ -15,6 +16,68 @@ from fem import FEM
 
 
 vtk_quadratic_hexahedron = 25
+
+
+class CollapsibleSection(QWidget):
+    def __init__(self, title="", parent=None):
+        super().__init__(parent)
+
+        # Кнопка заголовка
+        self.toggle_button = QToolButton(text=title, checkable=True, checked=True)
+        self.toggle_button.setStyleSheet("QToolButton { border: none; font-weight: bold; }")
+        self.toggle_button.setToolButtonStyle(Qt.ToolButtonTextBesideIcon)
+        self.toggle_button.setArrowType(Qt.DownArrow)
+        self.toggle_button.clicked.connect(self.on_toggle)
+
+        # Рамка навколо вмісту
+        self.content_frame = QFrame()
+        self.content_frame.setFrameShape(QFrame.Box)
+        self.content_frame.setLineWidth(1)
+        self.content_frame.setStyleSheet("QFrame { background-color: #f9f9f9; }")
+        self.content_frame.setObjectName("CollapsibleFrame")
+        self.content_frame.setStyleSheet("""
+                    QFrame#CollapsibleFrame {
+                        border: 1px solid #aaa;
+                        border-radius: 2px;
+                        background-color: #ffffff;
+                        padding-top: 2px;
+                        padding-bottom: 2px;
+                    }
+                """)
+
+        self.content_area = QWidget()
+        self.content_area.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Fixed)
+
+        self.content_layout = QVBoxLayout()
+        self.content_layout.setContentsMargins(8, 4, 8, 4)
+        self.content_area.setLayout(self.content_layout)
+
+        # Вміст у рамці
+        frame_layout = QVBoxLayout()
+        frame_layout.setContentsMargins(0, 0, 0, 0)
+        frame_layout.addWidget(self.content_area)
+        self.content_frame.setLayout(frame_layout)
+
+        # Основне компонування
+        main_layout = QVBoxLayout(self)
+        main_layout.setContentsMargins(0, 0, 0, 0)
+        main_layout.addWidget(self.toggle_button)
+        main_layout.addWidget(self.content_frame)
+
+    def on_toggle(self):
+        if self.toggle_button.isChecked():
+            self.toggle_button.setArrowType(Qt.DownArrow)
+            self.content_frame.show()
+        else:
+            self.toggle_button.setArrowType(Qt.RightArrow)
+            self.content_frame.hide()
+
+    def add_widget(self, widget):
+        self.content_layout.addWidget(widget)
+
+    def add_layout(self, layout):
+        self.content_layout.addLayout(layout)
+
 
 
 class MainWindow(QMainWindow):
@@ -58,7 +121,8 @@ class MainWindow(QMainWindow):
         layout = QVBoxLayout()
 
         # Cube size inputs
-        layout.addWidget(QLabel("Розмір (ax,ay,az)"))
+        mesh_section = CollapsibleSection("Сітка")
+        mesh_section.add_widget(QLabel("Розмір (ax,ay,az)"))
         self.ax_input = QLineEdit()
         self.ax_input.setText(str(self.fem.ax))
         self.ax_input.setPlaceholderText("ax")
@@ -75,9 +139,9 @@ class MainWindow(QMainWindow):
         cubesize_hbox.addWidget(self.ax_input, 1)
         cubesize_hbox.addWidget(self.ay_input, 1)
         cubesize_hbox.addWidget(self.az_input, 1)
-        layout.addLayout(cubesize_hbox)
+        mesh_section.add_layout(cubesize_hbox)
 
-        layout.addWidget(QLabel("Сітка (nx,ny,nz)"))
+        mesh_section.add_widget(QLabel("Поділ (nx,ny,nz)"))
         self.nx_input = QLineEdit()
         self.nx_input.setText(str(self.fem.nx))
         self.nx_input.setPlaceholderText("nx")
@@ -94,11 +158,12 @@ class MainWindow(QMainWindow):
         cubemesh_hbox.addWidget(self.nx_input, 1)
         cubemesh_hbox.addWidget(self.ny_input, 1)
         cubemesh_hbox.addWidget(self.nz_input, 1)
-        layout.addLayout(cubemesh_hbox)
+        mesh_section.add_layout(cubemesh_hbox)
 
         update_btn = QPushButton("Згенерувати сітку")
         update_btn.clicked.connect(self.remesh)
-        layout.addWidget(update_btn)
+        mesh_section.add_widget(update_btn)
+        layout.addWidget(mesh_section)
 
         line = QFrame()
         line.setFrameShape(QFrame.HLine)
