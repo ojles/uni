@@ -18,59 +18,75 @@ from fem import FEM
 vtk_quadratic_hexahedron = 25
 
 
+from PyQt5.QtWidgets import QWidget, QVBoxLayout, QToolButton, QSizePolicy, QFrame
+from PyQt5.QtCore import Qt
+
 class CollapsibleSection(QWidget):
     def __init__(self, title="", parent=None):
         super().__init__(parent)
 
-        # Кнопка заголовка
+        # Обгортка рамки
+        self.frame = QFrame()
+        self.frame.setObjectName("CollapsibleFrame")
+        self.frame.setStyleSheet("""
+            QFrame#CollapsibleFrame {
+                border: 1px solid #aaa;
+                border-radius: 8px;
+                background-color: transparent;
+            }
+        """)
+
+        frame_layout = QVBoxLayout()
+        frame_layout.setContentsMargins(0, 0, 0, 0)
+        frame_layout.setSpacing(0)
+
+        # Заголовок
         self.toggle_button = QToolButton(text=title, checkable=True, checked=True)
-        self.toggle_button.setStyleSheet("QToolButton { border: none; font-weight: bold; }")
+        self.toggle_button.setStyleSheet("""
+            QToolButton {
+                background-color: #e0e0e0;
+                border-top-left-radius: 8px;
+                border-top-right-radius: 8px;
+                padding: 6px;
+                font-weight: bold;
+            }
+        """)
         self.toggle_button.setToolButtonStyle(Qt.ToolButtonTextBesideIcon)
         self.toggle_button.setArrowType(Qt.DownArrow)
         self.toggle_button.clicked.connect(self.on_toggle)
 
-        # Рамка навколо вмісту
-        self.content_frame = QFrame()
-        self.content_frame.setFrameShape(QFrame.Box)
-        self.content_frame.setLineWidth(1)
-        self.content_frame.setStyleSheet("QFrame { background-color: #f9f9f9; }")
-        self.content_frame.setObjectName("CollapsibleFrame")
-        self.content_frame.setStyleSheet("""
-                    QFrame#CollapsibleFrame {
-                        border: 1px solid #aaa;
-                        border-radius: 2px;
-                        background-color: #ffffff;
-                        padding-top: 2px;
-                        padding-bottom: 2px;
-                    }
-                """)
-
+        # Контент
         self.content_area = QWidget()
         self.content_area.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Fixed)
-
+        self.content_area.setStyleSheet("""
+            QWidget {
+                background-color: white;
+                border-bottom-left-radius: 8px;
+                border-bottom-right-radius: 8px;
+            }
+        """)
         self.content_layout = QVBoxLayout()
-        self.content_layout.setContentsMargins(8, 4, 8, 4)
+        self.content_layout.setContentsMargins(8, 6, 8, 8)
+        self.content_layout.setSpacing(6)
         self.content_area.setLayout(self.content_layout)
 
-        # Вміст у рамці
-        frame_layout = QVBoxLayout()
-        frame_layout.setContentsMargins(0, 0, 0, 0)
+        # Компонування в рамці
+        frame_layout.addWidget(self.toggle_button)
         frame_layout.addWidget(self.content_area)
-        self.content_frame.setLayout(frame_layout)
+        self.frame.setLayout(frame_layout)
 
-        # Основне компонування
+        # Головне компонування віджета
         main_layout = QVBoxLayout(self)
         main_layout.setContentsMargins(0, 0, 0, 0)
-        main_layout.addWidget(self.toggle_button)
-        main_layout.addWidget(self.content_frame)
+        main_layout.addWidget(self.frame)
 
     def on_toggle(self):
         if self.toggle_button.isChecked():
             self.toggle_button.setArrowType(Qt.DownArrow)
-            self.content_frame.show()
+            self.content_area.show()
         else:
             self.toggle_button.setArrowType(Qt.RightArrow)
-            self.content_frame.hide()
+            self.content_area.hide()
 
     def add_widget(self, widget):
         self.content_layout.addWidget(widget)
@@ -122,6 +138,10 @@ class MainWindow(QMainWindow):
 
         # Cube size inputs
         mesh_section = CollapsibleSection("Сітка")
+        line = QFrame()
+        line.setFrameShape(QFrame.HLine)
+        line.setFrameShadow(QFrame.Sunken)
+        mesh_section.add_widget(line)
         mesh_section.add_widget(QLabel("Розмір (ax,ay,az)"))
         self.ax_input = QLineEdit()
         self.ax_input.setText(str(self.fem.ax))
