@@ -42,9 +42,9 @@ class CollapsibleSection(QWidget):
 
         # Заголовок
         self.toggle_button = QToolButton(text=title, checkable=True, checked=True)
+        self.toggle_button.setObjectName("CollapseButton")
         self.toggle_button.setStyleSheet("""
-            QToolButton {
-                background-color: #e0e0e0;
+            QToolButton#CollapseButton {
                 border-top-left-radius: 8px;
                 border-top-right-radius: 8px;
                 padding: 6px;
@@ -58,8 +58,9 @@ class CollapsibleSection(QWidget):
         # Контент
         self.content_area = QWidget()
         self.content_area.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Fixed)
+        self.content_area.setObjectName("CollapsibleContentArea")
         self.content_area.setStyleSheet("""
-            QWidget {
+            QWidget#CollapsibleContentArea {
                 background-color: white;
                 border-bottom-left-radius: 8px;
                 border-bottom-right-radius: 8px;
@@ -138,10 +139,6 @@ class MainWindow(QMainWindow):
 
         # Cube size inputs
         mesh_section = CollapsibleSection("Сітка")
-        line = QFrame()
-        line.setFrameShape(QFrame.HLine)
-        line.setFrameShadow(QFrame.Sunken)
-        mesh_section.add_widget(line)
         mesh_section.add_widget(QLabel("Розмір (ax,ay,az)"))
         self.ax_input = QLineEdit()
         self.ax_input.setText(str(self.fem.ax))
