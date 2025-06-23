@@ -5,7 +5,7 @@ import numpy as np
 import pyvista as pv
 from pyvistaqt import QtInteractor
 from PyQt5.QtWidgets import (
-    QApplication, QMainWindow, QWidget, QVBoxLayout, QFrame,
+    QApplication, QMainWindow, QWidget, QVBoxLayout, QFrame, QCheckBox,
     QHBoxLayout, QLineEdit, QLabel, QPushButton, QRadioButton, QButtonGroup)
 from PyQt5.QtCore import Qt
 from PyQt5.QtGui import QIntValidator
@@ -13,6 +13,7 @@ from vtk import VTK_QUADRATIC_HEXAHEDRON
 
 from fem import FEM
 from collapsible_section import CollapsibleSection
+import copy
 
 
 vtk_quadratic_hexahedron = 25
@@ -25,6 +26,8 @@ class MainWindow(QMainWindow):
         self.resize(1200, 800)
 
         main_layout = QHBoxLayout()
+
+        self.vertex_labels_actor = None
 
         # 3D viewer
         self.plotter = QtInteractor(self)
@@ -40,12 +43,15 @@ class MainWindow(QMainWindow):
         # Init FEM with default values
         self.fem = FEM(2,2,2,2,2,2)
         self.fem.mesh()
-        self.display_mesh()
-        # Side panel
-        self.side_panel = self.create_side_panel()
+
         # Also init picked faces
         self.picked_faces_p = []
         self.picked_faces_u = []
+
+        # Side panel (depends on self.fem)
+        self.side_panel = self.create_side_panel()
+        # Render side panel
+        self.display_mesh()
 
         main_layout.addWidget(self.plotter, 3)
         main_layout.addWidget(self.side_panel, 1)
@@ -101,19 +107,25 @@ class MainWindow(QMainWindow):
         update_btn = QPushButton("Згенерувати сітку")
         update_btn.clicked.connect(self.remesh)
         mesh_section.add_widget(update_btn)
+
+        self.vertex_labels_checkbox = QCheckBox("Показати номери вершин")
+        self.vertex_labels_checkbox.setChecked(False)
+        self.vertex_labels_checkbox.stateChanged.connect(self.toggle_vertex_labels)
         line = QFrame()
         line.setFrameShape(QFrame.HLine)
         line.setFrameShadow(QFrame.Sunken)
         mesh_section.add_widget(line)
+        mesh_section.add_widget(self.vertex_labels_checkbox)
+
         layout.addWidget(mesh_section)
 
-        line = QFrame()
-        line.setFrameShape(QFrame.HLine)
-        line.setFrameShadow(QFrame.Sunken)
-        layout.addWidget(line)
+        #line = QFrame()
+        #line.setFrameShape(QFrame.HLine)
+        #line.setFrameShadow(QFrame.Sunken)
+        #layout.addWidget(line)
         layout.addSpacing(10)
 
-        layout.addWidget(QLabel("Константи (E, nu)"))
+        constants_section = CollapsibleSection("Константи")
         self.e_input = QLineEdit()
         self.e_input.setText(str(self.fem.E))
         self.e_input.setPlaceholderText("E")
@@ -121,18 +133,26 @@ class MainWindow(QMainWindow):
         self.nu_input.setText(str(self.fem.nu))
         self.nu_input.setPlaceholderText("nu")
         constants_hbox = QHBoxLayout()
-        constants_hbox.addWidget(self.e_input, 1)
-        constants_hbox.addWidget(self.nu_input, 1)
-        layout.addLayout(constants_hbox)
+        constants_hbox.addWidget(QLabel("E:"), 1)
+        constants_hbox.addWidget(self.e_input, 5)
+        constants_hbox.addWidget(QLabel("nu:"), 1)
+        constants_hbox.addWidget(self.nu_input, 5)
+        constants_section.add_layout(constants_hbox)
 
-        layout.addWidget(QLabel("Навантаження"))
         self.p_input = QLineEdit()
         self.p_input.setText(str(self.fem.P))
         self.p_input.setPlaceholderText("P")
-        layout.addWidget(self.p_input)
+        constants_hbox = QHBoxLayout()
+        constants_hbox.addWidget(QLabel("P:"), 1)
+        constants_hbox.addWidget(self.p_input, 11)
+        constants_section.add_layout(constants_hbox)
         update_btn = QPushButton("Обчислити")
         update_btn.clicked.connect(self.calc)
-        layout.addWidget(update_btn)
+        constants_section.add_widget(update_btn)
+        go_back_btn = QPushButton("Повернутись до сітки")
+        go_back_btn.clicked.connect(self.back_to_mesh)
+        constants_section.add_widget(go_back_btn)
+        layout.addWidget(constants_section)
 
         ##############################################3
         line = QFrame()
@@ -252,7 +272,7 @@ class MainWindow(QMainWindow):
     def display_mesh(self, apply_shift=False):
         self.plotter.clear()
 
-        points = self.fem.AKT.copy()
+        points = copy.deepcopy(self.fem.AKT)
 
         if apply_shift:
             for p_idx, p in enumerate(self.fem.u):
@@ -260,8 +280,15 @@ class MainWindow(QMainWindow):
 
         if not apply_shift:
             self.grid, self.outer_faces = self.build_outer_faces_polydata(self.fem.AKT, self.fem.NT)
-            colors = np.array([[255, 255, 255] for i in range(self.grid.n_cells)], dtype=np.uint8)
-            self.grid.cell_data["colors"] = colors
+            _colors = []
+            for i in range(self.grid.n_cells):
+                if i in self.picked_faces_p:
+                    _colors.append([0, 255, 0])
+                elif i in self.picked_faces_u:
+                    _colors.append([255, 0, 0])
+                else:
+                    _colors.append([255, 255, 255])
+            self.grid.cell_data["colors"] = _colors
             self.actor = self.plotter.add_mesh(self.grid, show_edges=True, rgb=True, opacity=0.9)
 
         serendip_edge_triplets = [
@@ -279,10 +306,17 @@ class MainWindow(QMainWindow):
         mesh.points = points
         mesh.lines = lines
 
-        labels = [str(i) for i in range(np.array(points).shape[0])]
         self.plotter.add_mesh(mesh, color='black', line_width=1)
         self.plotter.add_mesh(mesh.points, color='blue', point_size=8, render_points_as_spheres=True)
-        self.plotter.add_point_labels(mesh.points, labels, font_size=12, point_color='red', point_size=10)
+        if self.vertex_labels_checkbox.isChecked():
+            labels = [str(i) for i in range(np.array(points).shape[0])]
+            self.vertex_labels_actor = self.plotter.add_point_labels(
+                    mesh.points,
+                    labels,
+                    font_size=12,
+                    show_points=False,
+                    text_color='black',
+                    fill_shape=False)
         self.plotter.add_axes()
 
     def remesh(self):
@@ -302,6 +336,22 @@ class MainWindow(QMainWindow):
         camera_position = self.plotter.camera_position
         self.display_mesh()
         self.plotter.camera_position = camera_position
+
+    def toggle_vertex_labels(self, state):
+        if self.vertex_labels_actor:
+            self.plotter.remove_actor(self.vertex_labels_actor)
+            self.plotter.renderer.RemoveActor(self.vertex_labels_actor)
+            self.vertex_labels_actor = None
+        if state == Qt.Checked:
+            labels = [str(i) for i in range(np.array(self.fem.AKT).shape[0])]
+            self.vertex_labels_actor = self.plotter.add_point_labels(
+                    self.fem.AKT,
+                    labels,
+                    font_size=12,
+                    show_points=False,
+                    text_color='black',
+                    fill_shape=False)
+        self.plotter.update()
 
     def calc(self):
         #if len(self.picked_faces_p) == 0 or len(self.picked_faces_u) == 0:
@@ -327,6 +377,11 @@ class MainWindow(QMainWindow):
                 float(self.nu_input.text()),
                 float(self.p_input.text()), zp, zu)
         self.display_mesh(True)
+
+    def back_to_mesh(self):
+        camera_position = self.plotter.camera_position
+        self.display_mesh()
+        self.plotter.camera_position = camera_position
 
 
 if __name__ == "__main__":
