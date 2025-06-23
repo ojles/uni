@@ -379,8 +379,8 @@ class FEM():
 
         return np.block([
                 [a11, a12, a13],
-                [a12, a22, a23],
-                [a13, a23, a33]
+                [a12.T, a22, a23],
+                [a13.T, a23.T, a33]
             ]).tolist()
 
     def _DXYZDNT(self, surface):
