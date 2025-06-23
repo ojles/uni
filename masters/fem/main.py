@@ -272,8 +272,10 @@ class MainWindow(QMainWindow):
         mesh.points = points
         mesh.lines = lines
 
+        labels = [str(i) for i in range(np.array(points).shape[0])]
         self.plotter.add_mesh(mesh, color='black', line_width=1)
         self.plotter.add_mesh(mesh.points, color='blue', point_size=8, render_points_as_spheres=True)
+        self.plotter.add_point_labels(mesh.points, labels, font_size=12, point_color='red', point_size=10)
         self.plotter.add_axes()
 
     def remesh(self):
