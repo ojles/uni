@@ -132,7 +132,6 @@ class FEM():
             print(f"fem: MGE el ({el_idx}/{len_felem})")
             self.MGE.append(self._MGE(el_idx))
         print("fem: MGE done.")
-        one_mge = self.MGE[1]
 
 
         FE = []

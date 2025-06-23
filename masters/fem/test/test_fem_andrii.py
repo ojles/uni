@@ -25,8 +25,8 @@ def read_csv_and_round(file_path, round_to):
 
 class TestFEM_FromAndrii(unittest.TestCase):
     def test_dfiabg(self):
-        fem = FEM(1,1,1,1,1,1,1,0.3,1)
-        fem.calc()
+        fem = FEM(1,1,1,1,1,1)
+        fem.calc(1, 0.3, 1, [], [])
         dfiabg = np.array(fem.DFIABG)
 
         round_to = 5
@@ -41,11 +41,21 @@ class TestFEM_FromAndrii(unittest.TestCase):
 
 
     def test_jakobians(self):
-        fem = FEM(1,1,1,2,2,2,1,0.3,1)
-        fem.calc()
+        fem = FEM(1,1,1,2,2,2)
+        fem.calc(1, 0.3, 1, [], [])
         print(len(fem.DXYZABG))
         print(np.array(fem.DXYZABG).shape)
         print(np.array(fem.DXYZABG))
+
+    def test_mges_are_same(self):
+        fem = FEM(1,3,1,1,3,1)
+        fem.calc(1, 0.3, 1, [], [])
+
+        #npt.assert_array_equal(fem.MGE[1], fem.MGE[2])
+        npt.assert_allclose(fem.MGE[0], fem.MGE[1], atol=1e-10)
+        npt.assert_allclose(fem.MGE[1], fem.MGE[2], atol=1e-10)
+        npt.assert_allclose(fem.MGE[0], fem.MGE[2], atol=1e-10)
+
 
 
 if __name__ == "__main__":
