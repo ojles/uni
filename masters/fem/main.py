@@ -9,7 +9,6 @@ from PyQt5.QtWidgets import (
     QHBoxLayout, QLineEdit, QLabel, QPushButton, QRadioButton, QButtonGroup)
 from PyQt5.QtCore import Qt
 from PyQt5.QtGui import QIntValidator
-from vtk import VTK_QUADRATIC_HEXAHEDRON
 
 from fem import FEM
 from collapsible_section import CollapsibleSection
@@ -27,6 +26,7 @@ class MainWindow(QMainWindow):
 
         main_layout = QHBoxLayout()
 
+        self.vertices_actor = None
         self.vertex_labels_actor = None
 
         # 3D viewer
@@ -111,10 +111,14 @@ class MainWindow(QMainWindow):
         self.vertex_labels_checkbox = QCheckBox("Показати номери вершин")
         self.vertex_labels_checkbox.setChecked(False)
         self.vertex_labels_checkbox.stateChanged.connect(self.toggle_vertex_labels)
+        self.vertex_checkbox = QCheckBox("Показати вершини")
+        self.vertex_checkbox.setChecked(True)
+        self.vertex_checkbox.stateChanged.connect(self.toggle_vertices)
         line = QFrame()
         line.setFrameShape(QFrame.HLine)
         line.setFrameShadow(QFrame.Sunken)
         mesh_section.add_widget(line)
+        mesh_section.add_widget(self.vertex_checkbox)
         mesh_section.add_widget(self.vertex_labels_checkbox)
 
         layout.addWidget(mesh_section)
@@ -306,8 +310,29 @@ class MainWindow(QMainWindow):
         mesh.points = points
         mesh.lines = lines
 
+
+        #############Stress map ##################
+        stress = [p[1] for p in points]
+        cells = []
+        for el in self.fem.NT:
+            cells.append(np.hstack([8, *[*el[:4], *el[12:16]]]))
+            cells.append(np.hstack([8, *[*el[12:16], *el[4:8]]]))
+        cells = np.array(cells).ravel()
+        cell_types = np.full(len(self.fem.NT)*2, pv.CellType.HEXAHEDRON)
+        gr = pv.UnstructuredGrid(cells, cell_types, points)
+        gr.point_data["stress"] = stress
+        ##########################################
+
         self.plotter.add_mesh(mesh, color='black', line_width=1)
-        self.plotter.add_mesh(mesh.points, color='blue', point_size=8, render_points_as_spheres=True)
+        if self.vertex_checkbox.isChecked():
+            self.vertices_actor = self.plotter.add_mesh(mesh.points, color='blue', point_size=8, render_points_as_spheres=True)
+        if apply_shift:
+            self.plotter.add_mesh(gr, scalars="stress",
+                                  cmap="bwr", clim=[-np.max(np.abs(stress)), np.max(np.abs(stress))],
+                                  show_edges=False,
+                                  opacity=0.5,
+                                  show_scalar_bar=True,
+                                  scalar_bar_args={"title": "Напруження"})
         if self.vertex_labels_checkbox.isChecked():
             labels = [str(i) for i in range(np.array(points).shape[0])]
             self.vertex_labels_actor = self.plotter.add_point_labels(
@@ -351,6 +376,16 @@ class MainWindow(QMainWindow):
                     show_points=False,
                     text_color='black',
                     fill_shape=False)
+        self.plotter.update()
+
+    def toggle_vertices(self, state):
+            #self.plotter.renderer.RemoveActor(self.vertices_actor)
+            #self.vertices_actor = None
+        if self.vertices_actor:
+            if state == Qt.Checked:
+                self.plotter.add_actor(self.vertices_actor)
+            else:
+                self.plotter.remove_actor(self.vertices_actor)
         self.plotter.update()
 
     def calc(self):
