@@ -125,7 +125,7 @@ class FEM():
         len_felem = len(self.finite_elements)
         for fidx, f_elem in enumerate(self.finite_elements):
             print(f"fem: DXYZABG el ({fidx}/{len_felem})")
-            self.DXYZABG.append(self._DXYZABG(f_elem))
+            self.DXYZABG.append(self._DXYZABG(f_elem, self.DFIABG))
         print("fem: DXYZABG done.")
 
         self.DJ = []
@@ -314,9 +314,9 @@ class FEM():
                 dpsite.append(el)
         return dpsite
 
-    def _DXYZABG(self, el):
+    def _DXYZABG(self, el, dfiabg):
         DXYZABG = []
-        for gauss_i in range(3*3*3):
+        for i in len(dfiabg):
             #   [dx/da, dy/da, dz/da]
             #   [dx/db, dy/db, dz/db]
             #   [dx/dg, dy/dg, dz/dg]
@@ -326,7 +326,7 @@ class FEM():
             for point_idx, point in enumerate(el):
                 for abg_i in range(3):
                     for xyz_i in range(3):
-                        j[abg_i][xyz_i] += point[xyz_i] * self.DFIABG[gauss_i][point_idx][abg_i]
+                        j[abg_i][xyz_i] += point[xyz_i] * dfiabg[i][point_idx][abg_i]
             DXYZABG.append(j)
         return DXYZABG
 
