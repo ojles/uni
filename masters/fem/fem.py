@@ -1,7 +1,6 @@
 import numpy as np
 import math
 
-
 local_coords = [
         [-1, 1, -1],
         [1, 1, -1],
@@ -25,6 +24,13 @@ local_coords = [
         [-1, 0, 1]
     ]
 
+sqrt06 = math.sqrt(0.6)
+
+gauss_points_3d = []
+for gamma in [-sqrt06, 0, sqrt06]:
+    for beta in [-sqrt06, 0, sqrt06]:
+        for alpha in [-sqrt06, 0, sqrt06]:
+            gauss_points_3d.append([alpha, beta, gamma])
 
 face_local_coords = [
         [-1, -1],
@@ -45,9 +51,6 @@ face_id_idxs = [
         [3, 0, 4, 7, 11, 12, 19, 15],  # left
         [1, 2, 6, 5, 9, 14, 17, 13]  # right
     ]
-
-
-sqrt06 = math.sqrt(0.6)
 
 
 class FEM():
@@ -112,7 +115,7 @@ class FEM():
         self.ZU = zu
         self.ZP = zp
 
-        self.DFIABG = self._DFIABG()
+        self.DFIABG = self._DFIABG(gauss_points_3d)
         print("fem: DFIABG done.")
 
         self.DPSITE = self._DPSITE()
@@ -246,25 +249,25 @@ class FEM():
         return (1/4) * (1 + a*ai) * (1 + b*bi) \
                 * (gi*(1 - a*a*bi*bi*gi*gi - b*b*ai*ai*gi*gi - g*g*ai*ai*bi*bi) - 2*g*(1+g*gi)*ai*ai*bi*bi)
 
-    def _DFIABG(self):
+    def _DFIABG(self, points):
         DFIABG = []
-        for gamma in [-sqrt06, 0, sqrt06]:
-            for beta in [-sqrt06, 0, sqrt06]:
-                for alpha in [-sqrt06, 0, sqrt06]:
-                    el = []
-                    for i, abg_i in enumerate(local_coords):
-                        if i <= 7:
-                            el.append([
-                                self._dPhi_dAlpha_1(alpha, beta, gamma, abg_i[0], abg_i[1], abg_i[2]),
-                                self._dPhi_dBeta_1( alpha, beta, gamma, abg_i[0], abg_i[1], abg_i[2]),
-                                self._dPhi_dGamma_1(alpha, beta, gamma, abg_i[0], abg_i[1], abg_i[2])])
-                        else:
-                            el.append([
-                                self._dPhi_dAlpha_2(alpha, beta, gamma, abg_i[0], abg_i[1], abg_i[2]),
-                                self._dPhi_dBeta_2( alpha, beta, gamma, abg_i[0], abg_i[1], abg_i[2]),
-                                self._dPhi_dGamma_2(alpha, beta, gamma, abg_i[0], abg_i[1], abg_i[2])])
-                    DFIABG.append(el)
+        for p in points:
+            el = []
+            for i, abg_i in enumerate(local_coords):
+                if i <= 7:
+                    el.append([
+                        self._dPhi_dAlpha_1(p[0], p[1], p[2], abg_i[0], abg_i[1], abg_i[2]),
+                        self._dPhi_dBeta_1( p[0], p[1], p[2], abg_i[0], abg_i[1], abg_i[2]),
+                        self._dPhi_dGamma_1(p[0], p[1], p[2], abg_i[0], abg_i[1], abg_i[2])])
+                else:
+                    el.append([
+                        self._dPhi_dAlpha_2(p[0], p[1], p[2], abg_i[0], abg_i[1], abg_i[2]),
+                        self._dPhi_dBeta_2( p[0], p[1], p[2], abg_i[0], abg_i[1], abg_i[2]),
+                        self._dPhi_dGamma_2(p[0], p[1], p[2], abg_i[0], abg_i[1], abg_i[2])])
+            DFIABG.append(el)
         return DFIABG
+
+
 
     def _dpsi_deta_14(self, e, t, ei, ti):
         return (1/4) * (t*ti + 1) * ei * (2*ei*e +   ti*t)
