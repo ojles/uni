@@ -428,7 +428,7 @@ class FEM():
 
     def _stress(self):
         stress = np.zeros(self.nqp).tolist()
-        stress_values = np.zeros((self.nqp, 3)).tolist()
+        stress_values = np.zeros((self.nqp, 10)).tolist()
         stress_count = np.zeros(self.nqp).tolist()
         for elem_idx, _ in enumerate(self.finite_elements):
             for p_idx, p in enumerate(self.NT[elem_idx]):
