@@ -41,7 +41,7 @@ class MainWindow(QMainWindow):
 
         #
         # Init FEM with default values
-        self.fem = FEM(2,2,2,2,2,2)
+        self.fem = FEM(1,1,1,1,1,1)
         self.fem.mesh()
 
         # Also init picked faces
@@ -312,20 +312,22 @@ class MainWindow(QMainWindow):
 
 
         #############Stress map ##################
-        stress = [p[1] for p in points]
-        cells = []
-        for el in self.fem.NT:
-            cells.append(np.hstack([8, *[*el[:4], *el[12:16]]]))
-            cells.append(np.hstack([8, *[*el[12:16], *el[4:8]]]))
-        cells = np.array(cells).ravel()
-        cell_types = np.full(len(self.fem.NT)*2, pv.CellType.HEXAHEDRON)
-        gr = pv.UnstructuredGrid(cells, cell_types, points)
-        gr.point_data["stress"] = stress
+        if apply_shift:
+            stress = self.fem.stress.copy()
+            cells = []
+            for el in self.fem.NT:
+                cells.append(np.hstack([8, *[*el[:4], *el[12:16]]]))
+                cells.append(np.hstack([8, *[*el[12:16], *el[4:8]]]))
+            cells = np.array(cells).ravel()
+            cell_types = np.full(len(self.fem.NT)*2, pv.CellType.HEXAHEDRON)
+            gr = pv.UnstructuredGrid(cells, cell_types, points)
+            gr.point_data["stress"] = stress
         ##########################################
 
         self.plotter.add_mesh(mesh, color='black', line_width=1)
-        if self.vertex_checkbox.isChecked():
-            self.vertices_actor = self.plotter.add_mesh(mesh.points, color='blue', point_size=8, render_points_as_spheres=True)
+        self.vertices_actor = self.plotter.add_mesh(mesh.points, color='blue', point_size=8, render_points_as_spheres=True)
+        if not self.vertex_checkbox.isChecked():
+            self.plotter.remove_actor(self.vertices_actor)
         if apply_shift:
             self.plotter.add_mesh(gr, scalars="stress",
                                   cmap="bwr", clim=[-np.max(np.abs(stress)), np.max(np.abs(stress))],

@@ -44,17 +44,17 @@ face_local_coords = [
     ]
 
 face_id_idxs = [
-        [3, 2, 1, 0, 10, 9, 8, 11],  # bottom
+        [3, 2, 1, 0, 10, 9, 8, 11],    # bottom
         [5, 6, 7, 4, 17, 18, 19, 16],  # top
-        [0, 1, 5, 4, 8, 13, 16, 12],  # front
+        [0, 1, 5, 4, 8, 13, 16, 12],   # front
         [2, 3, 7, 6, 10, 15, 18, 14],  # back
         [3, 0, 4, 7, 11, 12, 19, 15],  # left
-        [1, 2, 6, 5, 9, 14, 17, 13]  # right
+        [1, 2, 6, 5, 9, 14, 17, 13]    # right
     ]
 
 
 class FEM():
-    def __init__(self, ax, ay, az, nx, ny, nz, E=2, nu=0.3, P=0.05):
+    def __init__(self, ax, ay, az, nx, ny, nz, E=1, nu=0.3, P=0.5):
         self.ax = ax
         self.ay = ay
         self.az = az
@@ -91,9 +91,6 @@ class FEM():
                 for ix in range(0, self.nx * 2 + 1, x_step):
                     AKT.append([ix*x_scale, iy*y_scale, iz*z_scale])
 
-        for akt_idx, akt in enumerate(AKT):
-            print(akt_idx, ":", akt)
-
         self.AKT = AKT
         self.nqp = len(AKT)
 
@@ -101,10 +98,10 @@ class FEM():
         self.finite_elements = self._finite_elements()
 
         self.NT = self._NT()
-        for nt in self.NT:
-            for el in nt:
-                print(el, ",", sep="", end="")
-            print()
+        #for nt in self.NT:
+            #for el in nt:
+                #print(el, ",", sep="", end="")
+            #print()
 
     def calc(self, E, nu, P, zp, zu):
         if len(self.AKT) == 0:
@@ -135,24 +132,23 @@ class FEM():
         self.DFIXYZ = []
         for elem_idx, _ in enumerate(self.finite_elements):
             print(f"fem: DFIXYZ el ({elem_idx}/{len_felem})")
-            self.DFIXYZ.append(self._DFIXYZ(elem_idx))
+            self.DFIXYZ.append(self._DFIXYZ(elem_idx, self.DXYZABG, self.DFIABG))
         print("fem: DFIXYZ done.")
 
         self.MGE = []
         for el_idx, _ in enumerate(self.finite_elements):
             print(f"fem: MGE el ({el_idx}/{len_felem})")
             self.MGE.append(self._MGE(el_idx))
-        for mge in self.MGE[0]:
-            for x in mge:
-                print(x, ",", end="")
-            print()
+        #for mge in self.MGE[0]:
+            #for x in mge:
+                #print(x, ",", end="")
+            #print()
         print("fem: MGE done.")
 
         FE = []
         for _ in range(len_felem):
             FE.append(np.zeros(60).tolist())
         for elem_id, face_id in self.ZP:
-            print(" <<<<<<< FACE")
             FE[elem_id] = self._FE(self.finite_elements[elem_id], face_id)
         print("fem: FE done.")
 
@@ -168,9 +164,51 @@ class FEM():
 
         self.u = np.linalg.solve(MG, F)
         print("len:", len(self.u)/3)
-        for ui in range(int(len(self.u)/3)):
-            print(self.u[ui*3], ",", self.u[ui*3 + 1], ",", self.u[ui*3 + 2])
+        #for ui in range(int(len(self.u)/3)):
+            #print(self.u[ui*3], ",", self.u[ui*3 + 1], ",", self.u[ui*3 + 2])
         print("fem: Solved.")
+
+        print("")
+        print("fem: Calc stress..")
+        self.DFIABG_Local = self._DFIABG(local_coords)
+        print("fem: DFIABG(local) done.")
+
+        self.DXYZABG_Local = []
+        len_felem = len(self.finite_elements)
+        for fidx, f_elem in enumerate(self.finite_elements):
+            print(f"fem: DXYZABG(local) el ({fidx}/{len_felem})")
+            self.DXYZABG_Local.append(self._DXYZABG(f_elem, self.DFIABG_Local))
+        print("fem: DXYZABG(local) done.")
+
+        self.DFIXYZ_Local = []
+        for elem_idx, _ in enumerate(self.finite_elements):
+            print(f"fem: DFIXYZ(local) el ({elem_idx}/{len_felem})")
+            self.DFIXYZ_Local.append(self._DFIXYZ(elem_idx, self.DXYZABG_Local, self.DFIABG_Local))
+        print("fem: DFIXYZ(local) done.")
+
+        self.DUXYZ = []
+        for elem_idx, _ in enumerate(self.finite_elements):
+            self.DUXYZ.append(self._DUXYZ(elem_idx, self.DFIXYZ_Local))
+        print("fem: DUXYZ(local) done.")
+
+        self.SIGMA_Comp = []
+        for elem_idx, _ in enumerate(self.finite_elements):
+            self.SIGMA_Comp.append(self._SIGMA_Comp(el_idx))
+        print("fem: SIGMA_Comp(local) done.")
+
+        self.J123 = []
+        for elem_idx, _ in enumerate(self.finite_elements):
+            self.J123.append(self._J123(el_idx))
+
+        self.SIGMA = []
+        for elem_idx, _ in enumerate(self.finite_elements):
+            self.SIGMA.append(self._SIGMA(el_idx, self.J123[el_idx]))
+
+        self.stress = self._stress()
+        print(np.min(self.stress))
+        print(np.max(self.stress))
+
+
 
     def _finite_element(self, x0, y0, z0):
         x1 = x0 + self.dx
@@ -316,7 +354,7 @@ class FEM():
 
     def _DXYZABG(self, el, dfiabg):
         DXYZABG = []
-        for i in len(dfiabg):
+        for i in range(len(dfiabg)):
             #   [dx/da, dy/da, dz/da]
             #   [dx/db, dy/db, dz/db]
             #   [dx/dg, dy/dg, dz/dg]
@@ -330,15 +368,84 @@ class FEM():
             DXYZABG.append(j)
         return DXYZABG
 
-    def _DFIXYZ(self, elem_idx):
+    def _DFIXYZ(self, elem_idx, dxyzabg, dfiabg):
         DFIXYZ = []
-        for gauss_i in range(3*3*3):
+        for i in range(len(dfiabg)):
             dfixyz = []
-            for phi_i_abg in self.DFIABG[gauss_i]:
-                x = np.linalg.solve(self.DXYZABG[elem_idx][gauss_i], phi_i_abg).tolist()
+            for phi_i_abg in dfiabg[i]:
+                x = np.linalg.solve(dxyzabg[elem_idx][i], phi_i_abg).tolist()
                 dfixyz.append(x)
             DFIXYZ.append(dfixyz)
         return DFIXYZ
+
+    def _DUXYZ(self, el_idx, dfixyz):
+        DUXYZ = []
+        for point_idx in range(len(dfixyz[el_idx])):
+            #   [du_x/dx, du_x/dy, du_x/dz]
+            #   [du_y/dx, du_y/dy, du_y/dz]
+            #   [du_z/dx, du_z/dy, du_z/dz]
+            du = [[0, 0, 0],
+                 [0, 0, 0],
+                 [0, 0, 0]]
+
+            for pi in range(len(self.NT[el_idx])):
+                for du_xyz in range(3):
+                    for d_xyz in range(3):
+                        du[du_xyz][d_xyz] += self.u[self.NT[el_idx][pi]*3+du_xyz] * dfixyz[el_idx][point_idx][pi][d_xyz]
+
+            DUXYZ.append(du)
+
+        return DUXYZ
+
+    def _SIGMA_Comp(self, el_idx):
+        SIGMA_Comp = []
+        for p in range(len(self.NT[el_idx])):
+            s_xx = self.lambda_ * ((1 - self.nu) * self.DUXYZ[el_idx][p][0][0] + self.nu * (self.DUXYZ[el_idx][p][1][1] + self.DUXYZ[el_idx][p][2][2]))
+            s_yy = self.lambda_ * ((1 - self.nu) * self.DUXYZ[el_idx][p][1][1] + self.nu * (self.DUXYZ[el_idx][p][0][0] + self.DUXYZ[el_idx][p][2][2]))
+            s_zz = self.lambda_ * ((1 - self.nu) * self.DUXYZ[el_idx][p][2][2] + self.nu * (self.DUXYZ[el_idx][p][0][0] + self.DUXYZ[el_idx][p][1][1]))
+            s_xy = self.mu * (self.DUXYZ[el_idx][p][0][1] + self.DUXYZ[el_idx][p][1][0])
+            s_yz = self.mu * (self.DUXYZ[el_idx][p][1][2] + self.DUXYZ[el_idx][p][2][1])
+            s_xz = self.mu * (self.DUXYZ[el_idx][p][0][2] + self.DUXYZ[el_idx][p][2][0])
+            SIGMA_Comp.append([s_xx, s_yy, s_zz, s_xy, s_yz, s_xz])
+        return SIGMA_Comp
+
+    def _J123(self, el_idx):
+        J123 = []
+        for p in range(len(self.NT[el_idx])):
+            s_xx = self.SIGMA_Comp[el_idx][p][0]
+            s_yy = self.SIGMA_Comp[el_idx][p][1]
+            s_zz = self.SIGMA_Comp[el_idx][p][2]
+            s_xy = self.SIGMA_Comp[el_idx][p][3]
+            s_yz = self.SIGMA_Comp[el_idx][p][4]
+            s_xz = self.SIGMA_Comp[el_idx][p][5]
+            J123.append([s_xx + s_yy + s_zz,
+                         s_xx*s_yy + s_yy*s_zz + s_xx*s_zz - (s_xy*s_xy + s_yz*s_yz + s_xz*s_xz),
+                         s_xx*s_yy*s_zz + 2*s_xy*s_xz*s_yz - (s_xx*s_yz*s_yz + s_yy*s_xz*s_xz + s_zz*s_xy*s_xy)])
+        return J123
+
+    def _SIGMA(self, el_idx, j123):
+        sigma = []
+        for p in range(len(self.NT[el_idx])):
+            coefficients = [1, -j123[p][0], j123[p][1], j123[p][2]]
+            roots = np.roots(coefficients)
+            real_roots = [r.real for r in roots if np.isclose(r.imag, 0)]
+            sigma.append(real_roots)
+        return sigma
+
+    def _stress(self):
+        stress = np.zeros(self.nqp).tolist()
+        stress_count = np.zeros(self.nqp).tolist()
+        for elem_idx, _ in enumerate(self.finite_elements):
+            for p_idx, p in enumerate(self.NT[elem_idx]):
+                stress[p] += self.SIGMA[elem_idx][p_idx][-1]
+                stress_count[p] += 1
+
+        for s_idx, _ in enumerate(stress):
+            stress[s_idx] /= stress_count[s_idx]
+
+        return stress
+
+
 
     def _det(self, j):
         return j[0][0] * j[1][1] * j[2][2] \
