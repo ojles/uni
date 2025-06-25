@@ -154,18 +154,11 @@ class FEM():
 
         MG = self._MG(self.MGE)
         print("fem: MG done.")
-        #for mg in MG:
-            #for x in mg:
-                #print(x, ",", end="")
-            #print()
 
         F = self._F(FE)
         print("fem: F done.")
 
         self.u = np.linalg.solve(MG, F)
-        print("len:", len(self.u)/3)
-        #for ui in range(int(len(self.u)/3)):
-            #print(self.u[ui*3], ",", self.u[ui*3 + 1], ",", self.u[ui*3 + 2])
         print("fem: Solved.")
 
         print("")
@@ -174,7 +167,6 @@ class FEM():
         print("fem: DFIABG(local) done.")
 
         self.DXYZABG_Local = []
-        len_felem = len(self.finite_elements)
         for fidx, f_elem in enumerate(self.finite_elements):
             print(f"fem: DXYZABG(local) el ({fidx}/{len_felem})")
             self.DXYZABG_Local.append(self._DXYZABG(f_elem, self.DFIABG_Local))
@@ -205,6 +197,8 @@ class FEM():
             self.SIGMA.append(self._SIGMA(el_idx, self.J123[el_idx]))
 
         self.stress = self._stress()
+        for si, s in enumerate(self.stress):
+            print(si, ":", s)
         print(np.min(self.stress))
         print(np.max(self.stress))
 
@@ -426,7 +420,7 @@ class FEM():
     def _SIGMA(self, el_idx, j123):
         sigma = []
         for p in range(len(self.NT[el_idx])):
-            coefficients = [1, -j123[p][0], j123[p][1], j123[p][2]]
+            coefficients = [1, -j123[p][0], j123[p][1], -j123[p][2]]
             roots = np.roots(coefficients)
             real_roots = [r.real for r in roots if np.isclose(r.imag, 0)]
             sigma.append(real_roots)
@@ -434,14 +428,22 @@ class FEM():
 
     def _stress(self):
         stress = np.zeros(self.nqp).tolist()
+        stress_values = np.zeros((self.nqp, 3)).tolist()
         stress_count = np.zeros(self.nqp).tolist()
         for elem_idx, _ in enumerate(self.finite_elements):
             for p_idx, p in enumerate(self.NT[elem_idx]):
-                stress[p] += self.SIGMA[elem_idx][p_idx][-1]
+                if len(self.SIGMA[elem_idx][p_idx]) == 1:
+                    stress[p] += self.SIGMA[elem_idx][p_idx][-1]
+                    stress_values[p][int(stress_count[p])] = self.SIGMA[elem_idx][p_idx][-1]
+                else:
+                    stress[p] += self.SIGMA[elem_idx][p_idx][-1]
+                    stress_values[p][int(stress_count[p])] = self.SIGMA[elem_idx][p_idx][-1]
                 stress_count[p] += 1
 
         for s_idx, _ in enumerate(stress):
             stress[s_idx] /= stress_count[s_idx]
+
+        #print(stress_values)
 
         return stress
 
