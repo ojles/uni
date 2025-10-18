@@ -42,10 +42,15 @@ returns_mean = returns.mean()
 cov_matrix = returns.cov()
 
 
-
 #
 # Метод Монте-Карло
 #
+def portfolio_metrics(w):
+    p_ret = np.sum(returns_mean * w_i) * ANNUAL_TRADING_DAYS
+    p_vol = np.sqrt(np.dot(w.T, np.dot(cov_matrix, w))) * np.sqrt(ANNUAL_TRADING_DAYS)
+    sharpe_ratio = (p_ret - RISK_FREE_RATE) / p_vol
+    return p_ret, p_vol, sharpe_ratio
+
 PORTFOLIOS_N = 5000
 ANNUAL_TRADING_DAYS = 252 
 RISK_FREE_RATE = 0.0 # Ставка дохідності безризикового активу
@@ -61,13 +66,43 @@ for i in range(PORTFOLIOS_N):
     all_w[i, :] = w_i
 
     # Метрики портфоліо
-    portfolio_returns[i] = np.sum(returns_mean * w_i) * ANNUAL_TRADING_DAYS
-    portfolio_vol[i] = np.sqrt(np.dot(w_i.T, np.dot(cov_matrix, w_i))) * np.sqrt(ANNUAL_TRADING_DAYS)
-    sharpe_ratios[i] = (portfolio_returns[i] - RISK_FREE_RATE) / portfolio_vol[i]
+    p_ret, p_vol, p_sharpe_ratio = portfolio_metrics(w_i)
+    portfolio_returns[i] = p_ret
+    portfolio_vol[i] = p_vol
+    sharpe_ratios[i] = p_sharpe_ratio
 
-# 4. Знаходимо оптимальний портфель (найбільший коефіцієнт Шарпа)
+# Знаходимо оптимальний портфель (найбільший коефіцієнт Шарпа)
 max_sharpe_index = sharpe_ratios.argmax()
-optimal_sharpe_weights = all_w[max_sharpe_index, :]
-optimal_sharpe_return = portfolio_returns[max_sharpe_index]
-optimal_sharpe_volatility = portfolio_vol[max_sharpe_index]
-optimal_sharpe_ratio = sharpe_ratios[max_sharpe_index]
+optimal_mc_weights = all_w[max_sharpe_index, :]
+optimal_mc_return = portfolio_returns[max_sharpe_index]
+optimal_mc_volatility = portfolio_vol[max_sharpe_index]
+optimal_mc_ratio = sharpe_ratios[max_sharpe_index]
+
+
+#
+# SLSQP
+#
+def sharpe_ratio_neg(w):
+    _, _, sharpe_ratio = portfolio_metrics(w)
+    return -sharpe_ratio
+
+w0 = np.array([1/len(tickers)] * len(tickers))
+# Сума ваг повинна дорівнювати 1
+constraints = ({'type': 'eq', 'fun': lambda w: np.sum(w) - 1})
+# Ваги можуть бути лише додатніми
+bounds = tuple((0, 1) for _ in range(len(tickers)))
+
+from scipy.optimize import minimize
+optimized_results = minimize(
+    sharpe_ratio_neg,
+    w0,
+    method='SLSQP',
+    bounds=bounds,
+    constraints=constraints
+)
+
+# Отримуємо метрики оптимального портфеля
+optimal_slsqp_w = optimized_results.x
+optimal_slsqp_return, \
+    optimal_slsqp_vol, \
+    optimal_slsqp_ratio = portfolio_metrics(optimal_slsqp_w)
