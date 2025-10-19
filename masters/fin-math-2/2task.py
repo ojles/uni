@@ -9,7 +9,7 @@ import numpy as np
 #
 # Завантаження даних
 #
-stock_prices_csv = 'stock_prices.csv'
+stock_prices_csv = '2task_stock_prices.csv'
 tickers = ['AAPL', 'MSFT', 'GOOGL', 'AMZN', 'TSLA', 'JPM']
 if not os.path.exists(stock_prices_csv):
     start_date = '2018-01-01'
