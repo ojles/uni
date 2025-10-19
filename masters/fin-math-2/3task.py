@@ -21,7 +21,7 @@ import matplotlib.pyplot as plt
 import os
 
 
-ticker = 'TSLA'
+ticker = 'IBM'
 market_ticker = '^GSPC' # S&P500
 start_date = '2020-01-01'
 end_date = '2025-10-01'
@@ -61,11 +61,21 @@ print(f"  - за допомогою Регресії МНК: {beta_regression:.5
 #
 x_range = np.linspace(market_returns.min(), market_returns.max(), 100)
 y_line = beta_regression * x_range + intercept
-
-plt.figure(figsize=(10, 6))
+plt.figure(figsize=(6, 6))
 plt.scatter(market_returns, asset_returns, alpha=0.6, label='Помісячна дохідність')
 plt.plot(x_range, y_line, color='red',
          label=f'Лінія регресії (Бета = {beta_regression:.4f})')
+# Динамічне встановлення однакових меж для осей
+# (для коректного візуального нахилу)
+max_limit = max(abs(market_returns.min()), abs(market_returns.max()),
+                abs(asset_returns.min()), abs(asset_returns.max()))
+# Додаємо невеликий відступ
+padding = max_limit * 0.1
+limit = max_limit + padding
+# Встановлюємо однакові симетричні межі
+plt.xlim(-limit, limit)
+plt.ylim(-limit, limit)
+plt.gca().set_aspect('equal', adjustable='box')
 plt.title(f'Лінійна регресія для обчислення Бета {ticker} vs {market_ticker}')
 plt.xlabel(f'Дохідність ринку ({market_ticker})')
 plt.ylabel(f'Дохідність акції ({ticker})')
