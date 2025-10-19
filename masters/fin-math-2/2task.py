@@ -116,7 +116,6 @@ optimal_slsqp_return, \
 # Візуалізація волатильності vs дохідності
 #
 plt.figure(figsize=(16, 9))
-# Діаграма розсіювання, де колір відображає коефіцієнт Шарпа
 scatter = plt.scatter(
     portfolio_vol,
     portfolio_returns,
@@ -124,31 +123,24 @@ scatter = plt.scatter(
     cmap='viridis',
     marker='o',
     alpha=0.7,
-    s=20
-)
-plt.colorbar(scatter, label='Коефіцієнт Шарпа', orientation='vertical')
-
-# Оптимальний портфель Монте-Карло
+    s=20)
+plt.colorbar(scatter, label='Коеф. Шарпа', orientation='vertical')
 plt.scatter(
     optimal_mc_volatility,
     optimal_mc_return,
     color='red',
     marker='*',
     s=500,
-    label='Оптимальний портфель (Монте-Карло)'
-)
-
-# Оптимальний портфель SLSQP
+    label='Оптимальний портфель (Монте-Карло)')
 plt.scatter(
     optimal_slsqp_vol,
     optimal_slsqp_return,
     color='blue',
     marker='*',
     s=500,
-    label='Оптимальний портфель (SLSQP Оптимізація)'
-)
+    label='Оптимальний портфель (SLSQP Оптимізація)')
 
-plt.title('Volatility vs. Return', fontsize=18)
+plt.title('Volatility vs Return', fontsize=18)
 plt.xlabel('Волатильність (Стандартне відхилення, Річне)', fontsize=14)
 plt.ylabel('Очікувана дохідність (Річна)', fontsize=14)
 plt.legend(loc='best')
@@ -156,16 +148,15 @@ plt.grid(True, linestyle='--', alpha=0.5)
 plt.tight_layout()
 plt.show()
 
-# Виведення результатів
-print("\n--- Характеристики Оптимального Портфеля (Монте-Карло) ---")
+print("\nОптимальний портфель (Монте-Карло)")
 print(f"Дохідність: {optimal_mc_return:.2%}")
 print(f"Волатильність: {optimal_mc_volatility:.2%}")
-print(f"Коефіцієнт Шарпа: {optimal_mc_ratio:.4f}")
+print(f"Коеф. Шарпа: {optimal_mc_ratio:.4f}")
 print("Ваги портфеля:")
 for ticker, weight in zip(tickers, optimal_mc_weights):
     print(f"  {ticker}: {weight:.2%}")
 
-print("\n--- Характеристики Оптимального Портфеля (SLSQP Оптимізація) ---")
+print("\nОптимальний портфель (SLSQP Оптимізація)")
 print(f"Дохідність: {optimal_slsqp_return:.2%}")
 print(f"Волатильність: {optimal_slsqp_vol:.2%}")
 print(f"Коефіцієнт Шарпа: {optimal_slsqp_ratio:.4f}")

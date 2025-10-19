@@ -18,7 +18,6 @@ import yfinance as yf
 import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
-import os
 
 
 ticker = 'IBM'
@@ -29,6 +28,7 @@ end_date = '2025-10-01'
 #
 # Завантаження та кешування даних
 #
+import os
 stock_prices_csv = f'3task_stock_prices_{ticker}.csv'
 if not os.path.exists(stock_prices_csv):
     data = yf.download([ticker, market_ticker], start=start_date, end=end_date, interval='1mo')['Close']
@@ -40,7 +40,6 @@ else:
 returns = data.pct_change().dropna()
 asset_returns = returns[ticker]
 market_returns = returns[market_ticker]
-
 
 # Бета за допомогою коваріацій
 covariance = returns.cov().loc[ticker, market_ticker]
